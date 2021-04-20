@@ -78,14 +78,13 @@ public class OperateServiceImpl implements OperateService {
     }
 
     //添加数据
-    public void add(String rowKey, Map<String, Object> columns) throws IOException  {
+    public void add(String columnFamily, String rowKey, Map<String, Object> columns) throws IOException  {
         Table table = null;
         try {
             table = conn.getTable(TableName.valueOf(TABLENAME));
             Put put = new Put(Bytes.toBytes(rowKey));
             for (Map.Entry<String, Object> entry : columns.entrySet()) {
-                put.addColumn(SERIES.getBytes(), Bytes.toBytes(entry.getKey()),
-                        Bytes.toBytes("haha"));
+                put.addColumn(columnFamily.getBytes(), Bytes.toBytes(entry.getKey()), Bytes.toBytes(entry.getValue().toString()));
             }
             table.put(put);
         } finally {

@@ -33,6 +33,12 @@
             <artifactId>poi-ooxml</artifactId>
             <version>3.15</version>
         </dependency>
+        <!-- 处理excel和上面功能是一样的-->
+        <dependency>
+            <groupId>net.sourceforge.jexcelapi</groupId>
+            <artifactId>jxl</artifactId>
+            <version>2.6.10</version>
+        </dependency>
 
         <dependency>
             <groupId>org.apache.hbase</groupId>

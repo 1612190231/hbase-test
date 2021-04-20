@@ -17,7 +17,7 @@ public interface OperateService {
     void createTable(String tableName, String seriesStr) throws IOException;
 
     //添加数据
-    void add(String rowKey, Map<String, Object> columns) throws IOException;
+    void add(String columnFamily, String rowKey, Map<String, Object> columns) throws IOException;
 
     //根据rowkey获取数据
     Map<String, String> getAllValue(String rowKey) throws IOException;
