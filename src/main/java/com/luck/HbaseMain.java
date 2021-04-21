@@ -21,8 +21,9 @@ public class HbaseMain {
     public static void main(String[] args) throws Exception {
         // 获取数据源
         ReadExcel obj = new ReadExcel();
-        File file = new File("./src/main/resources/test.xls");
-        System.out.println(System.getProperty("user.dir"));//user.dir指定了当前的路径
+        String path = System.getProperty("user.dir") + "/src/main/resources/test.xls";
+        File file = new File(path);
+        System.out.println(System.getProperty(path));//user.dir指定了当前的路径
         List excelList = obj.readExcel(file);
 
         OperateService operateService = new OperateServiceImpl();
@@ -62,8 +63,8 @@ public class HbaseMain {
 //        }
 
         //查询数据2
-        String original_data_value =  operateService.getValueBySeries("rowKey","original_data");
-        System.out.println("original_data_value->"+original_data_value);
+//        String original_data_value =  operateService.getValueBySeries("rowKey","original_data");
+//        System.out.println("original_data_value->"+original_data_value);
 
         //查看表中所有数据
         operateService.getValueByTable();

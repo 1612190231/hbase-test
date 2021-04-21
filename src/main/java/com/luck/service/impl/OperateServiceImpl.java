@@ -30,7 +30,7 @@ import org.apache.log4j.Logger;
 public class OperateServiceImpl implements OperateService {
     private Logger logger = Logger.getLogger(this.getClass());
 
-    private static String SERIES = "s";
+    private static String SERIES = "flow,coordinate,info";
     private static String TABLENAME = "truckTrace";
     private static Connection conn;
 
@@ -139,10 +139,9 @@ public class OperateServiceImpl implements OperateService {
             table = conn.getTable(TableName.valueOf(TABLENAME));
             ResultScanner rs = table.getScanner(new Scan());
             for (Result r : rs) {
-                System.out.println("get rowkey:" + new String(r.getRow()));
+                logger.info("get rowkey:" + new String(r.getRow()));
                 for (KeyValue keyValue : r.raw()) {
-                    System.out.println(
-                            "row:" + new String(keyValue.getFamily()) + "====value:" + new String(keyValue.getValue()));
+                    logger.info("row:" + new String(keyValue.getFamily()) + "====value:" + new String(keyValue.getValue()));
                 }
             }
         } finally {
