@@ -2,10 +2,12 @@ package com.luck.service.impl;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 
+import com.luck.entity.BaseInfo;
 import com.luck.service.OperateService;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -30,10 +32,17 @@ import org.apache.log4j.Logger;
 public class OperateServiceImpl implements OperateService {
     private Logger logger = Logger.getLogger(this.getClass());
 
-    private static String SERIES = "flow,coordinate,info";
-    private static String TABLENAME = "truckTrace";
+    private String series;  //列族
+    private String tableName;   //表名
     private static Connection conn;
 
+    public String getSeries() { return series; }
+
+    public void setSeries(String series) { this.series = series; }
+
+    public String getTableName() { return tableName; }
+
+    public void setTableName(String tableName) { this.tableName = tableName; }
 
     public void init() {
         Configuration config = HBaseConfiguration.create();
@@ -41,7 +50,7 @@ public class OperateServiceImpl implements OperateService {
         try {
             logger.info("==========init start==========");
             conn = ConnectionFactory.createConnection(config);
-            createTable(TABLENAME, SERIES);
+            createTable(tableName, series);
             logger.info("===========init end===========");
         } catch (IOException e) {
             e.printStackTrace();
@@ -51,7 +60,7 @@ public class OperateServiceImpl implements OperateService {
     }
 
     //创建表
-    public void createTable(String tableName, String seriesStr) throws IllegalArgumentException, IOException {
+    public void createTable(String tableName, String seriesStr) throws IllegalArgumentException {
         Admin admin = null;
         TableName table = TableName.valueOf(tableName);
         try {
@@ -65,49 +74,83 @@ public class OperateServiceImpl implements OperateService {
                     descriptor.addFamily(new HColumnDescriptor(s.getBytes()));
                 }
                 admin.createTable(descriptor);
+                logger.info("==========create success==========");
             }
             logger.info("===========create end===========");
         } catch (Exception e) {
             e.printStackTrace();
             logger.error(e);
-            logger.info("==========init error==========");
+            logger.info("==========create error==========");
         }
         finally {
             IOUtils.closeQuietly(admin);
         }
     }
 
-    //添加数据
-    public void add(String columnFamily, String rowKey, Map<String, Object> columns) throws IOException  {
+    //添加数据---按列族
+    public void add(String columnFamily, String rowKey, Map<String, Object> columns) {
         Table table = null;
         try {
-            table = conn.getTable(TableName.valueOf(TABLENAME));
+            table = conn.getTable(TableName.valueOf(tableName));
             Put put = new Put(Bytes.toBytes(rowKey));
             for (Map.Entry<String, Object> entry : columns.entrySet()) {
                 put.addColumn(columnFamily.getBytes(), Bytes.toBytes(entry.getKey()), Bytes.toBytes(entry.getValue().toString()));
             }
             table.put(put);
+        } catch (Exception e){
+            logger.error(e);
+            logger.info("==========add error==========");
+        } finally {
+            IOUtils.closeQuietly(table);
+        }
+    }
+
+    //添加数据---按rowKey
+    public void addByRowKey(BaseInfo baseInfo) {
+        Table table = null;
+        String rowKey = baseInfo.getRowKey();
+        List<String> columnFamilyList = baseInfo.getColumnFamilyList();
+        List<Map<String, Object>> columnsList = baseInfo.getColumnsList();
+
+        try {
+            table = conn.getTable(TableName.valueOf(tableName));
+            Put put = new Put(Bytes.toBytes(rowKey));
+            for (int i = 0; i < columnFamilyList.size(); i++ ) {
+                for (Map.Entry<String, Object> entry : columnsList.get(i).entrySet()) {
+                    put.addColumn(columnFamilyList.get(i).getBytes(),
+                            Bytes.toBytes(entry.getKey()), Bytes.toBytes(entry.getValue().toString()));
+                }
+            }
+            table.put(put);
+        } catch (Exception e){
+            logger.error(e);
+            logger.info("==========add error==========");
         } finally {
             IOUtils.closeQuietly(table);
         }
     }
 
     //根据rowkey获取数据
-    public Map<String, String> getAllValue(String rowKey) throws IllegalArgumentException, IOException {
+    public Map<String, String> getAllValue(String rowKey) throws IllegalArgumentException {
         Table table = null;
         Map<String, String> resultMap = null;
         try {
-            table = conn.getTable(TableName.valueOf(TABLENAME));
+            logger.info("==========getAllValue start==========");
+            table = conn.getTable(TableName.valueOf(tableName));
             Get get = new Get(Bytes.toBytes(rowKey));
-            get.addFamily(SERIES.getBytes());
+            get.addFamily(series.getBytes());
             Result res = table.get(get);
-            Map<byte[], byte[]> result = res.getFamilyMap(SERIES.getBytes());
+            Map<byte[], byte[]> result = res.getFamilyMap(series.getBytes());
             Iterator<Entry<byte[], byte[]>> it = result.entrySet().iterator();
             resultMap = new HashMap<String, String>();
             while (it.hasNext()) {
                 Entry<byte[], byte[]> entry = it.next();
                 resultMap.put(Bytes.toString(entry.getKey()), Bytes.toString(entry.getValue()));
             }
+            logger.info("==========getAllValue end==========");
+        } catch (Exception e) {
+            logger.error(e);
+            logger.info("==========getAllValue error==========");
         } finally {
             IOUtils.closeQuietly(table);
         }
@@ -115,16 +158,21 @@ public class OperateServiceImpl implements OperateService {
     }
 
     //根据rowkey和column获取数据
-    public String getValueBySeries(String rowKey, String column) throws IllegalArgumentException, IOException {
+    public String getValueBySeries(String rowKey, String column) throws IllegalArgumentException {
         Table table = null;
         String resultStr = null;
         try {
-            table = conn.getTable(TableName.valueOf(TABLENAME));
+            logger.info("==========getValueBySeries start==========");
+            table = conn.getTable(TableName.valueOf(tableName));
             Get get = new Get(Bytes.toBytes(rowKey));
-            get.addColumn(Bytes.toBytes(SERIES), Bytes.toBytes(column));
+            get.addColumn(Bytes.toBytes(series), Bytes.toBytes(column));
             Result res = table.get(get);
-            byte[] result = res.getValue(Bytes.toBytes(SERIES), Bytes.toBytes(column));
+            byte[] result = res.getValue(Bytes.toBytes(series), Bytes.toBytes(column));
             resultStr = Bytes.toString(result);
+            logger.info("==========getValueBySeries end==========");
+        } catch (Exception e) {
+            logger.error(e);
+            logger.info("==========getValueBySeries error==========");
         } finally {
             IOUtils.closeQuietly(table);
         }
@@ -132,33 +180,43 @@ public class OperateServiceImpl implements OperateService {
     }
 
     //根据table查询所有数据
-    public void  getValueByTable() throws Exception {
+    public void  getValueByTable() {
         Map<String, String> resultMap = null;
         Table table = null;
         try {
-            table = conn.getTable(TableName.valueOf(TABLENAME));
+            logger.info("==========getValueByTable start==========");
+            table = conn.getTable(TableName.valueOf(tableName));
             ResultScanner rs = table.getScanner(new Scan());
             for (Result r : rs) {
-                logger.info("get rowkey:" + new String(r.getRow()));
+                logger.info("rowKey: " + new String(r.getRow()));
                 for (KeyValue keyValue : r.raw()) {
-                    logger.info("row:" + new String(keyValue.getFamily()) + "====value:" + new String(keyValue.getValue()));
+                    logger.info("columnFamily: " + new String(keyValue.getFamily()) + "====value: " + new String(keyValue.getValue()));
                 }
             }
+            logger.info("==========getValueByTable end==========");
+        } catch (Exception e) {
+            logger.error(e);
+            logger.info("==========getValueByTable error==========");
         } finally {
             IOUtils.closeQuietly(table);
         }
     }
 
     //删除表
-    public void dropTable(String tableName) throws IOException {
+    public void dropTable(String tableName) {
         Admin admin = null;
         TableName table = TableName.valueOf(tableName);
         try {
+            logger.info("==========dropTable start==========");
             admin = conn.getAdmin();
             if (admin.tableExists(table)) {
                 admin.disableTable(table);
                 admin.deleteTable(table);
             }
+            logger.info("==========dropTable end==========");
+        } catch (Exception e) {
+            logger.error(e);
+            logger.info("==========dropTable error==========");
         } finally {
             IOUtils.closeQuietly(admin);
         }
