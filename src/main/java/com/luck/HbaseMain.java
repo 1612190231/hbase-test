@@ -25,7 +25,7 @@ public class HbaseMain {
 
         //获取数据源
         ReadExcelUtil readExcelUtil = new ReadExcelUtil();
-        String path = System.getProperty("user.dir") + "/src/main/resources/test.xls";
+        String path = System.getProperty("user.dir") + "/src/main/resources/test1000.xls";
         File file = new File(path);
         List excelList = readExcelUtil.readExcel(file);
 //        System.out.println(System.getProperty(path));//user.dir指定了当前的路径
