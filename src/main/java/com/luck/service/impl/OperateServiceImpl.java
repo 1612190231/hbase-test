@@ -26,6 +26,7 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.filter.PrefixFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.log4j.Logger;
 
@@ -180,26 +181,36 @@ public class OperateServiceImpl implements OperateService {
     }
 
     //根据table查询所有数据
-    public void  getValueByTable() {
+    public ResultScanner  getValueByTable() {
         Map<String, String> resultMap = null;
         Table table = null;
         try {
             logger.info("==========getValueByTable start==========");
             table = conn.getTable(TableName.valueOf(tableName));
             ResultScanner rs = table.getScanner(new Scan());
-            for (Result r : rs) {
-                logger.info("rowKey: " + new String(r.getRow()));
-                for (KeyValue keyValue : r.raw()) {
-                    logger.info("columnFamily: " + new String(keyValue.getFamily()) + "====value: " + new String(keyValue.getValue()));
-                }
-            }
             logger.info("==========getValueByTable end==========");
+            return rs;
         } catch (Exception e) {
             logger.error(e);
             logger.info("==========getValueByTable error==========");
         } finally {
             IOUtils.closeQuietly(table);
         }
+        return null;
+    }
+
+    //根据rowKey查询数据
+    public ResultScanner getValueByPreKey(String preRow){
+        try {
+            Scan s = new Scan();
+            Table table = conn.getTable(TableName.valueOf(tableName));
+            s.setFilter(new PrefixFilter(preRow.getBytes()));
+            ResultScanner rs = table.getScanner(s);
+            return rs;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     //删除表

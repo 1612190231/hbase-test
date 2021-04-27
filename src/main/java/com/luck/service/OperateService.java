@@ -1,6 +1,7 @@
 package com.luck.service;
 
 import com.luck.entity.BaseInfo;
+import org.apache.hadoop.hbase.client.ResultScanner;
 
 import java.io.IOException;
 import java.util.List;
@@ -40,7 +41,10 @@ public interface OperateService {
     String getValueBySeries(String rowKey, String column);
 
     //根据table查询所有数据
-    void  getValueByTable();
+    ResultScanner getValueByTable();
+
+    //根据rowKey前缀查询记录
+    ResultScanner getValueByPreKey(String preRow);
 
     //删除表
     void dropTable(String tableName);

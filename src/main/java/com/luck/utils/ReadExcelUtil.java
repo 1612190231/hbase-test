@@ -43,10 +43,10 @@ public class ReadExcelUtil {
                             continue;
                         }
                         innerList.add(cellinfo);
-                        System.out.print(cellinfo);
+//                        System.out.print(cellinfo);
                     }
                     outerList.add(i, innerList);
-                    System.out.println();
+//                    System.out.println();
                 }
                 return outerList;
             }
