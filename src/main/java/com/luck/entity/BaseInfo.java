@@ -1,5 +1,6 @@
 package com.luck.entity;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -8,7 +9,7 @@ import java.util.Map;
  * @description k-v实体类
  * @date 2021/4/22 14:17
  */
-public class BaseInfo {
+public class BaseInfo implements Serializable {
     String rowKey;          //key
     List<String> columnFamilyList;    //列族
     List<Map<String, Object>> columnsList;    //值

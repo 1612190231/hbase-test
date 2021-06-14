@@ -12,6 +12,7 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
+import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
 import scala.Tuple2;
@@ -56,7 +57,12 @@ public final class SparkWordCount {
         for (Tuple2<?, ?> tuple : output) {
             System.out.println(tuple._1() + ": " + tuple._2());
         }
-        counts.saveAsHadoopFile("/home/cklu/spark/data",String.class,JSONObject.class, RDDMultipleTextOutputFormat2.class);
+        counts.map(new Function<Tuple2<String, Integer>, String>() {
+            @Override
+            public String call(Tuple2<String, Integer> arg0) throws Exception {
+                return arg0._1.toUpperCase() + ": " + arg0._2;
+            }
+        }).saveAsTextFile(args[1]);
         ctx.stop();
     }
 }
