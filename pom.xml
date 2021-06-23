@@ -15,7 +15,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.luck.SparkWordCount</mainClass>  // 根据自己类名和路径修改
+                            <mainClass>com.luck.SparkSpatialCluster</mainClass>  // 根据自己类名和路径修改
                         </manifest>
                     </archive>
                     <descriptorRefs>

@@ -36,10 +36,11 @@ public final class SparkSpatialCluster {
         JavaSparkContext javaSparkContext = new JavaSparkContext(conf);
         SpatialClusterService spatialClusterService= new SpatialClusterServiceImpl();
 
-        JavaRDD<TrajectoryInfo> pointsRdd = spatialClusterService.readCsv(javaSparkContext,"D:/Users/lu/Desktop/test.csv");
+        JavaRDD<TrajectoryInfo> pointsRdd = spatialClusterService.readCsv(javaSparkContext, args[0]);
         JavaPairRDD<String, TrajectoryInfo> ones = pointsRdd.mapToPair(new PairFunction<TrajectoryInfo, String, TrajectoryInfo>() {
             @Override
             public Tuple2<String, TrajectoryInfo> call(TrajectoryInfo p) {
+                System.out.println("plan_no -> " + p.getPlanNo());
                 return new Tuple2<String, TrajectoryInfo>(p.getPlanNo(), p);
             }
         });

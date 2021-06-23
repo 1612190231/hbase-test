@@ -7,9 +7,11 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 
-public class SpatialClusterServiceImpl implements SpatialClusterService {
+import java.io.Serializable;
+
+public class SpatialClusterServiceImpl implements SpatialClusterService, Serializable {
     public JavaRDD<TrajectoryInfo> readCsv(JavaSparkContext javaSparkContext, String path){
-        JavaRDD<String> data = javaSparkContext.textFile("D:/Users/lu/Desktop/plan_day_trace_1.csv");
+        JavaRDD<String> data = javaSparkContext.textFile(path);
         //SQLContext sqlContext = new SQLContext(sc);
 
         JavaRDD<TrajectoryInfo> rdd_records = data.map(new Function<String, TrajectoryInfo>() {
@@ -17,6 +19,7 @@ public class SpatialClusterServiceImpl implements SpatialClusterService {
                 // Here you can use JSON
                 // Gson gson = new Gson();
                 // gson.fromJson(line, TrajectoryInfo.class);
+                System.out.println("Points -> " + line);
                 String[] fields = line.split(",");
                 if(fields.length<7 ) return null;
                 TrajectoryInfo trajectoryInfo = new TrajectoryInfo(fields[0], fields[1], fields[2], fields[3], fields[4],

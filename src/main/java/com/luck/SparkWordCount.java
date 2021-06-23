@@ -15,6 +15,8 @@ import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scala.Tuple2;
 
 import java.util.Arrays;
@@ -24,6 +26,8 @@ import java.util.regex.Pattern;
 import org.json.JSONObject;
 
 public final class SparkWordCount {
+//    private final Logger LOG = LoggerFactory.getLogger(this.getClass());
+
     private static final Pattern SPACE = Pattern.compile(" ");
 
     public static void main(String[] args) throws Exception {
