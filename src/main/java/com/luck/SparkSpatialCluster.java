@@ -32,19 +32,52 @@ public final class SparkSpatialCluster {
             System.exit(1);
         }
 
+//        System.out.println("112312\n");
         SparkConf conf = new SparkConf().setAppName("CSVDemo");
         JavaSparkContext javaSparkContext = new JavaSparkContext(conf);
-        SpatialClusterService spatialClusterService= new SpatialClusterServiceImpl();
+//        SpatialClusterService spatialClusterService= new SpatialClusterServiceImpl();
+//        JavaRDD<TrajectoryInfo> pointsRdd = spatialClusterService.readCsv(javaSparkContext, args[0]);
+        JavaRDD<String> lines = javaSparkContext.textFile(args[0]);
+//        System.out.println("---------------lines start----------------");
+//        System.out.println(lines.collect());
+//        System.out.println("--------------- lines end-----------------");
+        //SQLContext sqlContext = new SQLContext(sc);
 
-        JavaRDD<TrajectoryInfo> pointsRdd = spatialClusterService.readCsv(javaSparkContext, args[0]);
+        // 提取轨迹点数据，并转成RDD结构
+        JavaRDD<TrajectoryInfo> pointsRdd = lines.map(new Function<String, TrajectoryInfo>() {
+            public TrajectoryInfo call(String line) throws Exception {
+//                System.out.println("---------------line start----------------");
+//                System.out.println("Points -> " + line);
+//                System.out.println("--------------- line end-----------------");
+                String[] fields = line.split("\t");
+                if(fields.length<7 ) return null;
+                TrajectoryInfo trajectoryInfo = new TrajectoryInfo(fields[0], fields[1], fields[2], fields[3], fields[4],
+                        Float.parseFloat(fields[5]), Float.parseFloat(fields[6]), Float.parseFloat(fields[5]),
+                        Float.parseFloat(fields[5]), Float.parseFloat(fields[6]), Float.parseFloat(fields[6]));
+
+                return trajectoryInfo;
+            }
+        });
+//        System.out.println("---------------points start----------------");
+//        System.out.println(pointsRdd.collect());
+//        System.out.println("--------------- points end-----------------");
+        // map算子
         JavaPairRDD<String, TrajectoryInfo> ones = pointsRdd.mapToPair(new PairFunction<TrajectoryInfo, String, TrajectoryInfo>() {
             @Override
             public Tuple2<String, TrajectoryInfo> call(TrajectoryInfo p) {
-                System.out.println("plan_no -> " + p.getPlanNo());
+//                System.out.println("plan_no -> " + p.getPlanNo());
                 return new Tuple2<String, TrajectoryInfo>(p.getPlanNo(), p);
             }
         });
 
+//        System.out.println("---------------points start----------------");
+//        List<Tuple2<String, TrajectoryInfo>> tmp_ones = ones.collect();
+//        for (Tuple2<?, ?> tuple : tmp_ones) {
+//            System.out.println("plan_no -> " + tuple._1());
+//        }
+//        System.out.println("--------------- points end-----------------");
+
+        // reduce算子
         JavaPairRDD<String, TrajectoryInfo> results = ones.reduceByKey(new Function2<TrajectoryInfo, TrajectoryInfo, TrajectoryInfo>() {
             @Override
             public TrajectoryInfo call(TrajectoryInfo i1, TrajectoryInfo i2) {
@@ -52,17 +85,23 @@ public final class SparkSpatialCluster {
                 Float maxLat = Math.max(i1.getMaxLat(),i2.getMaxLat());
                 Float minLon = Math.min(i1.getMinLon(),i2.getMinLon());
                 Float maxLon = Math.max(i1.getMaxLon(),i2.getMaxLon());
-                TrajectoryInfo trajectoryInfo = new TrajectoryInfo(i1.getPlanNo(), i1.getVehicleNo(), i1.getStartTime(),
+                TrajectoryInfo trajectoryInfo1 = new TrajectoryInfo(i1.getPlanNo(), i1.getVehicleNo(), i1.getStartTime(),
                         i1.getEndTime(), i1.getOperationTIme(), i1.getLat(), i1.getLon(), minLat, maxLat, minLon, maxLon);
-                TrajectoryInfo trajectoryInfo1 = new TrajectoryInfo(i2.getPlanNo(), i2.getVehicleNo(), i2.getStartTime(),
+                TrajectoryInfo trajectoryInfo2 = new TrajectoryInfo(i2.getPlanNo(), i2.getVehicleNo(), i2.getStartTime(),
                         i2.getEndTime(), i2.getOperationTIme(), i2.getLat(), i2.getLon(), minLat, maxLat, minLon, maxLon);
 
                 List<TrajectoryInfo> trajectoryInfos = i1.getTrajectoryInfos();
-                trajectoryInfos.addAll(i2.getTrajectoryInfos());
-                trajectoryInfos.add(trajectoryInfo);
-                trajectoryInfos.add(trajectoryInfo1);
-                trajectoryInfo.setTrajectoryInfos(trajectoryInfos);
-                return trajectoryInfo;
+                if (i2.getTrajectoryInfos() != null) {
+                    trajectoryInfos.addAll(i2.getTrajectoryInfos());
+                }
+                if (trajectoryInfo1 != null) {
+                    trajectoryInfos.add(trajectoryInfo1);
+                }
+                if (trajectoryInfo2 != null) {
+                    trajectoryInfos.add(trajectoryInfo2);
+                }
+                trajectoryInfo1.setTrajectoryInfos(trajectoryInfos);
+                return trajectoryInfo1;
             }
         });
 
