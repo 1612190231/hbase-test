@@ -61,7 +61,7 @@ public final class SparkSpatialCluster {
 //        System.out.println("---------------points start----------------");
 //        System.out.println(pointsRdd.collect());
 //        System.out.println("--------------- points end-----------------");
-        // map算子
+        // mapToPair算子
         JavaPairRDD<String, TrajectoryInfo> ones = pointsRdd.mapToPair(new PairFunction<TrajectoryInfo, String, TrajectoryInfo>() {
             @Override
             public Tuple2<String, TrajectoryInfo> call(TrajectoryInfo p) {
@@ -77,7 +77,7 @@ public final class SparkSpatialCluster {
 //        }
 //        System.out.println("--------------- points end-----------------");
 
-        // reduce算子
+        // reduceByKey算子
         JavaPairRDD<String, TrajectoryInfo> results = ones.reduceByKey(new Function2<TrajectoryInfo, TrajectoryInfo, TrajectoryInfo>() {
             @Override
             public TrajectoryInfo call(TrajectoryInfo i1, TrajectoryInfo i2) {
@@ -90,16 +90,15 @@ public final class SparkSpatialCluster {
                 TrajectoryInfo trajectoryInfo2 = new TrajectoryInfo(i2.getPlanNo(), i2.getVehicleNo(), i2.getStartTime(),
                         i2.getEndTime(), i2.getOperationTIme(), i2.getLat(), i2.getLon(), minLat, maxLat, minLon, maxLon);
 
-                List<TrajectoryInfo> trajectoryInfos = i1.getTrajectoryInfos();
+                List<TrajectoryInfo> trajectoryInfos = new ArrayList<>();
+                if (i1.getTrajectoryInfos() != null){
+                    trajectoryInfos.addAll(i1.getTrajectoryInfos());
+                }
                 if (i2.getTrajectoryInfos() != null) {
                     trajectoryInfos.addAll(i2.getTrajectoryInfos());
                 }
-                if (trajectoryInfo1 != null) {
-                    trajectoryInfos.add(trajectoryInfo1);
-                }
-                if (trajectoryInfo2 != null) {
-                    trajectoryInfos.add(trajectoryInfo2);
-                }
+                trajectoryInfos.add(trajectoryInfo1);
+                trajectoryInfos.add(trajectoryInfo2);
                 trajectoryInfo1.setTrajectoryInfos(trajectoryInfos);
                 return trajectoryInfo1;
             }
