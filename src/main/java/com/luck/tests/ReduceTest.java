@@ -12,7 +12,7 @@ import java.util.List;
  */
 
 
-public class reduceTest {
+public class ReduceTest {
     public static TrajectoryInfo call(TrajectoryInfo i1, TrajectoryInfo i2) {
         Float minLat = Math.min(i1.getMinLat(),i2.getMinLat());
         Float maxLat = Math.max(i1.getMaxLat(),i2.getMaxLat());
