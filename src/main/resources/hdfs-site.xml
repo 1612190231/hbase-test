@@ -23,19 +23,11 @@
         <final>true</final>
     </property>
     <property>
-	<name>dfs.name.dir</name>
-	<value>/home/cklu/hadoop/name</value>
-    </property>
-    <property>
-	<name>dfs.http.address</name>
-	<value>10.11.1.191:50071</value>
-    </property>
-    <property>
-	<name>dfs.data.dir</name>
-	<value>/home/cklu/hadoop/data</value>
+        <name>dfs.http.address</name>
+        <value>10.11.1.192:50071</value>
     </property>
     <property>
         <name>dfs.namenode.secondary.http-address</name>
-        <value>10.11.1.192:50090</value>
+        <value>10.11.1.193:50090</value>
     </property>
 </configuration>

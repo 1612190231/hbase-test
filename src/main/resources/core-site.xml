@@ -20,7 +20,7 @@
     <!-- hadoop namenode -->
     <property>
         <name>fs.defaultFS</name>
-        <value>hdfs://10.11.1.191:9003</value>
+        <value>hdfs://10.11.1.192:9003</value>
     </property>
 
     <!-- hadoop tmp address -->
@@ -28,11 +28,16 @@
         <name>hadoop.tmp.dir</name>
         <value>/home/cklu/tmp/hadoop</value>
     </property>
+    <property>
+        <name>fs.hdfs.impl</name>
+        <value>org.apache.hadoop.hdfs.DistributedFileSystem</value>
+        <description>The FileSystem for hdfs: uris.</description>
+    </property>
 
     <!-- zookeeper address-->
     <property>
         <name>ha.zookeeper.quorum</name>
-        <value>10.11.1.191:2182,10.11.1.192:2182,10.11.1.193:2182</value>
+        <value>luchengkai@10.11.1.196:2182,10.11.1.192:2182,10.11.1.193:2182</value>
     </property>
 
     <!-- zookeeper timeout-->

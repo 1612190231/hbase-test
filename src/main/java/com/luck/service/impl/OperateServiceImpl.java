@@ -47,6 +47,7 @@ public class OperateServiceImpl implements OperateService {
 
     public void init() {
         Configuration config = HBaseConfiguration.create();
+        config.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
         config.addResource("/src/main/resources/hbase-site.xml");
         try {
             logger.info("==========init start==========");
@@ -75,6 +76,34 @@ public class OperateServiceImpl implements OperateService {
                     descriptor.addFamily(new HColumnDescriptor(s.getBytes()));
                 }
                 admin.createTable(descriptor);
+                logger.info("==========create success==========");
+            }
+            logger.info("===========create end===========");
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e);
+            logger.info("==========create error==========");
+        }
+        finally {
+            IOUtils.closeQuietly(admin);
+        }
+    }
+
+    //创建表---预分区
+    public void createTable(String tableName, String seriesStr, byte[][] startKey) throws IllegalArgumentException {
+        Admin admin = null;
+        TableName table = TableName.valueOf(tableName);
+        try {
+            logger.info("==========create start==========");
+            admin = conn.getAdmin();
+            if (!admin.tableExists(table)) {
+                System.out.println(tableName + " table not Exists");
+                HTableDescriptor descriptor = new HTableDescriptor(table);
+                String[] series = seriesStr.split(",");
+                for (String s : series) {
+                    descriptor.addFamily(new HColumnDescriptor(s.getBytes()));
+                }
+                admin.createTable(descriptor, startKey);
                 logger.info("==========create success==========");
             }
             logger.info("===========create end===========");

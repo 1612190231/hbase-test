@@ -1,6 +1,10 @@
 package com.luck.dao.impl;
 
 import com.luck.dao.HBaseDao;
+import com.luck.entity.DataBaseDTO;
+import com.luck.enums.SizeUnitEnum;
+import com.luck.utils.EmptyUtil;
+import com.luck.utils.FileSizeUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.*;
@@ -20,8 +24,8 @@ import java.util.*;
  */
 public class HBaseDaoImpl implements HBaseDao {
  
-    Connection conn = null;
-    DataBaseDTO dataBaseDTO = null;
+    public Connection conn = null;
+    DataBaseDTO dataBaseDTO = new DataBaseDTO();
  
     public final String pk = "RowKey";
  
@@ -108,7 +112,7 @@ public class HBaseDaoImpl implements HBaseDao {
     protected String getFullTableName(String tableName){
         if(this.dataBaseDTO != null){
             String dbName = this.dataBaseDTO.getDbName();
-            if(!StringUtil.isEmpty(dbName)&&!StringUtil.isEmpty(tableName)){
+            if(!EmptyUtil.isEmpty(dbName)&&!EmptyUtil.isEmpty(tableName)){
                 //表名中不包含:
                 if(tableName.indexOf(":")<0){
                     return new StringBuffer(dbName).append(":").append(tableName).toString();
@@ -819,11 +823,11 @@ public class HBaseDaoImpl implements HBaseDao {
         return Double.parseDouble(String.format("%.2f",rate*100));
     }
     @Override
-    public double storeSizeOfDB(SizeUnitEnum unit) {
+    public double storeSizeOfDB(int unit) {
         return storeSizeOfDB(null,unit);
     }
     @Override
-    public double storeSizeOfDB(String nameSpace, SizeUnitEnum unit) {
+    public double storeSizeOfDB(String nameSpace, int unit) {
         //获取storefile总大小(默认累加单位为MB)
         double totalHFileSizes = 0.00;
         Admin admin = null;
@@ -876,10 +880,10 @@ public class HBaseDaoImpl implements HBaseDao {
                 }
             }
         }
-        return FileSizeUtil.valueOf(totalHFileSizes*1024*1024, unit);
+        return FileSizeUtil.FormetFileSize(Math.round(totalHFileSizes*1024*1024), unit);
     }
     @Override
-    public double storeSizeOfTbl(String nameSpace,String[] tables, SizeUnitEnum unit) {
+    public double storeSizeOfTbl(String nameSpace,String[] tables, int unit) {
         //获取storefile总大小(默认累加单位为MB)
         double totalHFileSizes = 0.00;
         Admin admin =null;
@@ -927,7 +931,7 @@ public class HBaseDaoImpl implements HBaseDao {
                 }
             }
         }
-        return FileSizeUtil.valueOf(totalHFileSizes*1024*1024, unit);
+        return FileSizeUtil.FormetFileSize(Math.round(totalHFileSizes*1024*1024), unit);
     }
     @Override
     public int countTables(String nameSpace) {

@@ -4,9 +4,7 @@ import com.luck.entity.BaseInfo;
 import com.luck.service.OperateService;
 import com.luck.service.impl.OperateServiceImpl;
 import com.luck.utils.LogUtil;
-import com.luck.utils.ReadExcelUtil;
-import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.client.Result;
+import com.luck.utils.ExcelUtil;
 import org.apache.hadoop.hbase.client.ResultScanner;
 
 import java.io.File;
@@ -27,10 +25,10 @@ public class HbaseMain {
         LogUtil logUtil = new LogUtil();
 
         //获取数据源
-        ReadExcelUtil readExcelUtil = new ReadExcelUtil();
+        ExcelUtil excelUtil = new ExcelUtil();
         String path = System.getProperty("user.dir") + "/src/main/resources/test1000.xls";
         File file = new File(path);
-        List excelList = readExcelUtil.readExcel(file);
+        List excelList = excelUtil.readExcel(file);
 //        System.out.println(System.getProperty(path));//user.dir指定了当前的路径
 
         //开始hbase操作

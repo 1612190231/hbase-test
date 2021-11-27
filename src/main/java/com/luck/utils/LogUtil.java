@@ -13,7 +13,7 @@ import java.util.List;
  * @date 2021/4/22 16:29
  */
 public class LogUtil {
-    private Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = Logger.getLogger(this.getClass());
     public void runTimeLog(String type, long endTime, long startTime){
         logger.info(type + " project runtime: "+(endTime-startTime)+"ms");
     }

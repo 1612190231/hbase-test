@@ -1,5 +1,6 @@
 package com.luck.dao;
 
+import com.luck.enums.SizeUnitEnum;
 import org.apache.hadoop.hbase.client.Result;
 
 import java.util.List;
@@ -38,11 +39,11 @@ public interface HBaseDao {
 
     double usedRate();
 
-    double storeSizeOfDB(SizeUnitEnum unit);
+    double storeSizeOfDB(int unit);
 
-    double storeSizeOfDB(String nameSpace, SizeUnitEnum unit);
+    double storeSizeOfDB(String nameSpace, int unit);
 
-    double storeSizeOfTbl(String nameSpace,String[] tables, SizeUnitEnum unit);
+    double storeSizeOfTbl(String nameSpace,String[] tables, int unit);
 
     int countTables(String nameSpace);
 

@@ -13,16 +13,19 @@ public class TrajectoryInfo implements Serializable {
     private Float lon;
 
     private List<TrajectoryInfo> trajectoryInfos;
+    private List<PointInfo> pointInfos;
 
     // 分组信息
     private Float minLat;       // 最小纬度
     private Float maxLat;       // 最大纬度
     private Float minLon;       // 最小经度
     private Float maxLon;       // 最大经度
-    private Float midLat;       // 中间纬度
-    private Float midLon;       // 中间经度
+    private Double midLat;       // 中间纬度
+    private Double midLon;       // 中间经度
     private String midPoint;     // 中间经纬度列表表示
     private String groupId;      // 分组
+    private String keyMin;       // 小索引
+    private String keyMax;       // 大索引
 
     // constructor , getters and setters
     public TrajectoryInfo() {
@@ -141,19 +144,19 @@ public class TrajectoryInfo implements Serializable {
         this.maxLon = maxLon;
     }
 
-    public Float getMidLat() {
+    public Double getMidLat() {
         return midLat;
     }
 
-    public void setMidLat(Float midLat) {
+    public void setMidLat(Double midLat) {
         this.midLat = midLat;
     }
 
-    public Float getMidLon() {
+    public Double getMidLon() {
         return midLon;
     }
 
-    public void setMidLon(Float midLon) {
+    public void setMidLon(Double midLon) {
         this.midLon = midLon;
     }
 
@@ -171,5 +174,29 @@ public class TrajectoryInfo implements Serializable {
 
     public void setGroupId(String groupId) {
         this.groupId = groupId;
+    }
+
+    public List<PointInfo> getPointInfos() {
+        return pointInfos;
+    }
+
+    public void setPointInfos(List<PointInfo> pointInfos) {
+        this.pointInfos = pointInfos;
+    }
+
+    public String getKeyMin() {
+        return keyMin;
+    }
+
+    public void setKeyMin(String keyMin) {
+        this.keyMin = keyMin;
+    }
+
+    public String getKeyMax() {
+        return keyMax;
+    }
+
+    public void setKeyMax(String keyMax) {
+        this.keyMax = keyMax;
     }
 }
