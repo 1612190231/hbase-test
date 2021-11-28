@@ -52,8 +52,8 @@ public final class SparkSpatialCluster {
                 String[] fields = line.split("\t");
                 if(fields.length<7 ) return null;
                 TrajectoryInfo trajectoryInfo = new TrajectoryInfo(fields[0], fields[1], fields[2], fields[3], fields[4],
-                        Float.parseFloat(fields[5]), Float.parseFloat(fields[6]), Float.parseFloat(fields[5]),
-                        Float.parseFloat(fields[5]), Float.parseFloat(fields[6]), Float.parseFloat(fields[6]));
+                        Float.parseFloat(fields[5]), Float.parseFloat(fields[6]), Double.parseDouble(fields[5]),
+                        Double.parseDouble(fields[5]), Double.parseDouble(fields[6]), Double.parseDouble(fields[6]));
 
                 return trajectoryInfo;
             }
@@ -81,10 +81,10 @@ public final class SparkSpatialCluster {
         JavaPairRDD<String, TrajectoryInfo> results = ones.reduceByKey(new Function2<TrajectoryInfo, TrajectoryInfo, TrajectoryInfo>() {
             @Override
             public TrajectoryInfo call(TrajectoryInfo i1, TrajectoryInfo i2) {
-                Float minLat = Math.min(i1.getMinLat(),i2.getMinLat());
-                Float maxLat = Math.max(i1.getMaxLat(),i2.getMaxLat());
-                Float minLon = Math.min(i1.getMinLon(),i2.getMinLon());
-                Float maxLon = Math.max(i1.getMaxLon(),i2.getMaxLon());
+                double minLat = Math.min(i1.getMinLat(),i2.getMinLat());
+                double maxLat = Math.max(i1.getMaxLat(),i2.getMaxLat());
+                double minLon = Math.min(i1.getMinLon(),i2.getMinLon());
+                double maxLon = Math.max(i1.getMaxLon(),i2.getMaxLon());
                 TrajectoryInfo trajectoryInfo1 = new TrajectoryInfo(i1.getPlanNo(), i1.getVehicleNo(), i1.getStartTime(),
                         i1.getEndTime(), i1.getOperationTIme(), i1.getLat(), i1.getLon(), minLat, maxLat, minLon, maxLon);
                 TrajectoryInfo trajectoryInfo2 = new TrajectoryInfo(i2.getPlanNo(), i2.getVehicleNo(), i2.getStartTime(),

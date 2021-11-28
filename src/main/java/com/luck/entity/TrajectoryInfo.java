@@ -16,16 +16,20 @@ public class TrajectoryInfo implements Serializable {
     private List<PointInfo> pointInfos;
 
     // 分组信息
-    private Float minLat;       // 最小纬度
-    private Float maxLat;       // 最大纬度
-    private Float minLon;       // 最小经度
-    private Float maxLon;       // 最大经度
+    private Double minLat;       // 最小纬度
+    private Double maxLat;       // 最大纬度
+    private Double minLon;       // 最小经度
+    private Double maxLon;       // 最大经度
     private Double midLat;       // 中间纬度
     private Double midLon;       // 中间经度
     private String midPoint;     // 中间经纬度列表表示
     private String groupId;      // 分组
     private String keyMin;       // 小索引
     private String keyMax;       // 大索引
+    private Long minTime;      // 最小时间戳
+    private Long maxTime;      // 最大时间戳
+    private Long keyTime;      // 索引-temporal
+    private Long keyRange;     // 索引-spatial
 
     // constructor , getters and setters
     public TrajectoryInfo() {
@@ -33,7 +37,7 @@ public class TrajectoryInfo implements Serializable {
 
     // constructor , getters and setters
     public TrajectoryInfo(String planNo, String vehicleNo, String startTime, String endTime, String operationTIme,
-                          Float lat, Float lon, Float minLat, Float maxLat, Float minLon, Float maxLon) {
+                          Float lat, Float lon, Double minLat, Double maxLat, Double minLon, Double maxLon) {
         // TODO Auto-generated constructor stub
         this.planNo = planNo;
         this.vehicleNo = vehicleNo;
@@ -112,35 +116,35 @@ public class TrajectoryInfo implements Serializable {
         this.trajectoryInfos = trajectoryInfos;
     }
 
-    public Float getMinLat() {
+    public Double getMinLat() {
         return minLat;
     }
 
-    public void setMinLat(Float minLat) {
+    public void setMinLat(Double minLat) {
         this.minLat = minLat;
     }
 
-    public Float getMaxLat() {
+    public Double getMaxLat() {
         return maxLat;
     }
 
-    public void setMaxLat(Float maxLat) {
+    public void setMaxLat(Double maxLat) {
         this.maxLat = maxLat;
     }
 
-    public Float getMinLon() {
+    public double getMinLon() {
         return minLon;
     }
 
-    public void setMinLon(Float minLon) {
+    public void setMinLon(Double minLon) {
         this.minLon = minLon;
     }
 
-    public Float getMaxLon() {
+    public Double getMaxLon() {
         return maxLon;
     }
 
-    public void setMaxLon(Float maxLon) {
+    public void setMaxLon(Double maxLon) {
         this.maxLon = maxLon;
     }
 
@@ -198,5 +202,37 @@ public class TrajectoryInfo implements Serializable {
 
     public void setKeyMax(String keyMax) {
         this.keyMax = keyMax;
+    }
+
+    public Long getMinTime() {
+        return minTime;
+    }
+
+    public void setMinTime(Long minTime) {
+        this.minTime = minTime;
+    }
+
+    public Long getMaxTime() {
+        return maxTime;
+    }
+
+    public void setMaxTime(Long maxTime) {
+        this.maxTime = maxTime;
+    }
+
+    public Long getKeyTime() {
+        return keyTime;
+    }
+
+    public void setKeyTime(Long keyTime) {
+        this.keyTime = keyTime;
+    }
+
+    public Long getKeyRange() {
+        return keyRange;
+    }
+
+    public void setKeyRange(Long keyRange) {
+        this.keyRange = keyRange;
     }
 }

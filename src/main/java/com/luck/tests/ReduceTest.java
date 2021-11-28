@@ -14,10 +14,10 @@ import java.util.List;
 
 public class ReduceTest {
     public static TrajectoryInfo call(TrajectoryInfo i1, TrajectoryInfo i2) {
-        Float minLat = Math.min(i1.getMinLat(),i2.getMinLat());
-        Float maxLat = Math.max(i1.getMaxLat(),i2.getMaxLat());
-        Float minLon = Math.min(i1.getMinLon(),i2.getMinLon());
-        Float maxLon = Math.max(i1.getMaxLon(),i2.getMaxLon());
+        double minLat = Math.min(i1.getMinLat(),i2.getMinLat());
+        double maxLat = Math.max(i1.getMaxLat(),i2.getMaxLat());
+        double minLon = Math.min(i1.getMinLon(),i2.getMinLon());
+        double maxLon = Math.max(i1.getMaxLon(),i2.getMaxLon());
         TrajectoryInfo trajectoryInfo1 = new TrajectoryInfo(i1.getPlanNo(), i1.getVehicleNo(), i1.getStartTime(),
                 i1.getEndTime(), i1.getOperationTIme(), i1.getLat(), i1.getLon(), minLat, maxLat, minLon, maxLon);
         TrajectoryInfo trajectoryInfo2 = new TrajectoryInfo(i2.getPlanNo(), i2.getVehicleNo(), i2.getStartTime(),
@@ -39,12 +39,12 @@ public class ReduceTest {
     public static void main(String[] args) throws Exception {
         TrajectoryInfo trajectoryInfo = new TrajectoryInfo("DD210305000182", "鲁LD7167",
                 "2021/3/5 6:28","2021/3/5 8:49", "2021/3/5 6:40",
-                Float.parseFloat("35.3625"),Float.parseFloat("119.449545"), Float.parseFloat("35.3625"),
-                Float.parseFloat("35.3625"),Float.parseFloat("119.449545"),Float.parseFloat("119.449545"));
+                Float.parseFloat("35.3625"), Float.parseFloat("119.449545"), Double.parseDouble("35.3625"),
+                Double.parseDouble("35.3625"), Double.parseDouble("119.449545"), Double.parseDouble("119.449545"));
         TrajectoryInfo trajectoryInfo2 = new TrajectoryInfo("DD210305000182", "鲁LD7167",
                 "2021/3/5 6:28","2021/3/5 8:49", "2021/3/5 6:41",
-                Float.parseFloat("35.36233"),Float.parseFloat("119.4494067"), Float.parseFloat("35.36233"),
-                Float.parseFloat("35.36233"),Float.parseFloat("119.4494067"),Float.parseFloat("119.4494067"));
+                Float.parseFloat("35.36233"),Float.parseFloat("119.4494067"), Double.parseDouble("35.36233"),
+                Double.parseDouble("35.36233"), Double.parseDouble("119.4494067"), Double.parseDouble("119.4494067"));
         TrajectoryInfo trajectoryInfo1 = call(trajectoryInfo, trajectoryInfo2);
         System.out.println(trajectoryInfo1);
     }

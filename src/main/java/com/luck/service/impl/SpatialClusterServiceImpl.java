@@ -23,8 +23,8 @@ public class SpatialClusterServiceImpl implements SpatialClusterService, Seriali
                 String[] fields = line.split(",");
                 if(fields.length<7 ) return null;
                 TrajectoryInfo trajectoryInfo = new TrajectoryInfo(fields[0], fields[1], fields[2], fields[3], fields[4],
-                        Float.parseFloat(fields[5]), Float.parseFloat(fields[6]), Float.parseFloat(fields[5]),
-                        Float.parseFloat(fields[5]), Float.parseFloat(fields[6]), Float.parseFloat(fields[6]));
+                        Float.parseFloat(fields[5]), Float.parseFloat(fields[6]), Double.parseDouble(fields[5]),
+                        Double.parseDouble(fields[5]), Double.parseDouble(fields[6]), Double.parseDouble(fields[6]));
 
                 return trajectoryInfo;
             }
