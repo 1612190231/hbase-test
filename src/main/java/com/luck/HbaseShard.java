@@ -58,7 +58,8 @@ public class HbaseShard {
         //创建表
         String series = operateService.getSeries();
         String tableName = operateService.getTableName();
-        operateService.createTable(tableName,series);
+        byte[][] startKey = new byte[5][];
+        operateService.createTable(tableName,series, startKey);
 
         //添加数据集---按rowKey
 //        long startTime=System.currentTimeMillis(); //获取开始时间

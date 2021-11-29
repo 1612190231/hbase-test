@@ -28,6 +28,9 @@ public interface OperateService {
     //创建表
     void createTable(String tableName, String seriesStr);
 
+    // 创建表 - 预分区
+    void createTable(String tableName, String seriesStr, byte[][] startKey);
+
     //添加数据---按列族单条
     void add(String columnFamily, String rowKey, Map<String, Object> columns);
 

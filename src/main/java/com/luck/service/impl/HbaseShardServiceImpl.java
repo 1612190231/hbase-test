@@ -1,26 +1,19 @@
 package com.luck.service.impl;
 
-import com.luck.curve.XZ2SFC;
 import com.luck.entity.PointInfo;
 import com.luck.entity.TrajectoryInfo;
 import com.luck.index.XZIndexing;
 import com.luck.service.HbaseShardService;
+import com.luck.utils.ByteUtil;
 import com.luck.utils.CsvUtil;
-import com.luck.utils.ExcelUtil;
 import org.apache.commons.csv.CSVRecord;
 
-import java.io.File;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-/**
- * @author luchengkai
- * @description 分区实现类
- * @date 2021/11/26 1:37
- */
 class JudgeMap {
     private String vehicleNo;
     private Long nums;
@@ -29,6 +22,12 @@ class JudgeMap {
         this.vehicleNo = vehicleNo;
     }
 }
+
+/**
+ * @author luchengkai
+ * @description 分区实现类
+ * @date 2021/11/26 1:37
+ */
 public class HbaseShardServiceImpl implements HbaseShardService {
     public List<TrajectoryInfo> getTrajectoryInfos(URL url) throws ParseException {
         CsvUtil csvUtil = new CsvUtil();
@@ -47,11 +46,7 @@ public class HbaseShardServiceImpl implements HbaseShardService {
             if (!trajectoryInfoMap.containsKey(judgeMap)){
                 TrajectoryInfo trajectoryInfo = new TrajectoryInfo();
                 List<PointInfo> pointInfos = new ArrayList<>();
-                PointInfo pointInfo = new PointInfo(
-                        items.get(0),
-                        items.get(1),
-                        lat,
-                        lon);
+                PointInfo pointInfo = new PointInfo(items.get(0), items.get(1), lat, lon);
                 pointInfos.add(pointInfo);
                 trajectoryInfo.setVehicleNo(items.get(0));
                 trajectoryInfo.setPointInfos(pointInfos);
@@ -70,11 +65,7 @@ public class HbaseShardServiceImpl implements HbaseShardService {
             }
             else {
                 TrajectoryInfo trajectoryInfo = trajectoryInfoMap.get(judgeMap);
-                PointInfo pointInfo = new PointInfo(
-                        items.get(0),
-                        items.get(1),
-                        lat,
-                        lon);
+                PointInfo pointInfo = new PointInfo(items.get(0), items.get(1), lat, lon);
                 trajectoryInfo.getPointInfos().add(pointInfo);
                 // 时间戳
                 if (target_date > trajectoryInfo.getMaxTime()){
@@ -140,8 +131,15 @@ public class HbaseShardServiceImpl implements HbaseShardService {
 
     public List<TrajectoryInfo> dimensionReduction(List<TrajectoryInfo> trajectoryInfos){
         for (TrajectoryInfo trajectoryInfo: trajectoryInfos){
+            // 生成范围key
             XZIndexing xzIndexing = new XZIndexing();
-            trajectoryInfo.setKeyRange(xzIndexing.index((short) 3, trajectoryInfo.getMinLon(), trajectoryInfo.getMinLat(),trajectoryInfo.getMaxLon(),trajectoryInfo.getMaxLat()));
+            trajectoryInfo.setKeyRange(xzIndexing.index((short) 2, trajectoryInfo.getMinLon(), trajectoryInfo.getMinLat(),trajectoryInfo.getMaxLon(),trajectoryInfo.getMaxLat()));
+            ByteUtil byteUtil = new ByteUtil();
+
+            // 生成rowKey
+            byte[] timeKey = byteUtil.convertLongToBytes(trajectoryInfo.getKeyTime());
+            byte[] rangeKey = byteUtil.convertLongToBytes(trajectoryInfo.getKeyRange());
+            trajectoryInfo.setRowKey(byteUtil.mergeBytes(timeKey, rangeKey));
         }
         return trajectoryInfos;
     }

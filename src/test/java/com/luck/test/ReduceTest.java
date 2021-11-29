@@ -1,4 +1,4 @@
-package com.luck.tests;
+package com.luck.test;
 
 import com.luck.entity.TrajectoryInfo;
 

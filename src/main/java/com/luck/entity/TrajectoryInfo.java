@@ -30,6 +30,7 @@ public class TrajectoryInfo implements Serializable {
     private Long maxTime;      // 最大时间戳
     private Long keyTime;      // 索引-temporal
     private Long keyRange;     // 索引-spatial
+    private byte[] rowKey;       //  索引
 
     // constructor , getters and setters
     public TrajectoryInfo() {
@@ -234,5 +235,13 @@ public class TrajectoryInfo implements Serializable {
 
     public void setKeyRange(Long keyRange) {
         this.keyRange = keyRange;
+    }
+
+    public byte[] getRowKey() {
+        return rowKey;
+    }
+
+    public void setRowKey(byte[] rowKey) {
+        this.rowKey = rowKey;
     }
 }

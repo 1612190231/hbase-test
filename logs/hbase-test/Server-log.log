@@ -1,1 +1,20 @@
-[2021-04-21 00:33:38.705] [ INFO] [main] [com.luck.service.impl.OperateServiceImpl:42] - ==========init start==========
+[2021-11-30 00:31:18.403] [ WARN] [main] [org.apache.hadoop.util.Shell:673] - Did not find winutils.exe: {}
+java.io.FileNotFoundException: java.io.FileNotFoundException: HADOOP_HOME and hadoop.home.dir are unset. -see https://wiki.apache.org/hadoop/WindowsProblems
+	at org.apache.hadoop.util.Shell.fileNotFoundException(Shell.java:528)
+	at org.apache.hadoop.util.Shell.getHadoopHomeDir(Shell.java:549)
+	at org.apache.hadoop.util.Shell.getQualifiedBin(Shell.java:572)
+	at org.apache.hadoop.util.Shell.<clinit>(Shell.java:669)
+	at org.apache.hadoop.util.StringUtils.<clinit>(StringUtils.java:79)
+	at org.apache.hadoop.conf.Configuration.getBoolean(Configuration.java:1555)
+	at org.apache.hadoop.hbase.HBaseConfiguration.checkDefaultsVersion(HBaseConfiguration.java:67)
+	at org.apache.hadoop.hbase.HBaseConfiguration.addHbaseResources(HBaseConfiguration.java:81)
+	at org.apache.hadoop.hbase.HBaseConfiguration.create(HBaseConfiguration.java:96)
+	at com.luck.service.impl.OperateServiceImpl.init(OperateServiceImpl.java:49)
+	at com.luck.HbaseShard.main(HbaseShard.java:56)
+Caused by: java.io.FileNotFoundException: HADOOP_HOME and hadoop.home.dir are unset.
+	at org.apache.hadoop.util.Shell.checkHadoopHomeInner(Shell.java:448)
+	at org.apache.hadoop.util.Shell.checkHadoopHome(Shell.java:419)
+	at org.apache.hadoop.util.Shell.<clinit>(Shell.java:496)
+	... 7 more
+[2021-11-30 00:31:18.428] [ INFO] [main] [com.luck.service.impl.OperateServiceImpl:53] - ==========init start==========
+[2021-11-30 00:31:18.482] [ WARN] [main] [org.apache.hadoop.util.NativeCodeLoader:62] - Unable to load native-hadoop library for your platform... using builtin-java classes where applicable

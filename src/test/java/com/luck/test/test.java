@@ -1,4 +1,4 @@
-package com.luck;
+package com.luck.test;
 
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -8,7 +8,7 @@ import java.util.Locale;
 
 /**
  * @author luchengkai
- * @description 测测试
+ * @description 测试
  * @date 2021/9/10 11:09
  */
 public class test {
