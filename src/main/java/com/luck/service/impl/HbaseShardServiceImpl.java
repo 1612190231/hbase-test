@@ -1,7 +1,9 @@
 package com.luck.service.impl;
 
+import com.luck.curve.XZ2SFC;
 import com.luck.entity.PointInfo;
 import com.luck.entity.TrajectoryInfo;
+import com.luck.index.XZIndexing;
 import com.luck.service.HbaseShardService;
 import com.luck.utils.CsvUtil;
 import com.luck.utils.ExcelUtil;
@@ -9,47 +11,91 @@ import org.apache.commons.csv.CSVRecord;
 
 import java.io.File;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * @author luchengkai
  * @description 分区实现类
  * @date 2021/11/26 1:37
  */
+class JudgeMap {
+    private String vehicleNo;
+    private Long nums;
+    JudgeMap(String vehicleNo, Long nums){
+        this.nums = nums;
+        this.vehicleNo = vehicleNo;
+    }
+}
 public class HbaseShardServiceImpl implements HbaseShardService {
-    public List<TrajectoryInfo> getTrajectoryInfos(File file){
-        ExcelUtil excelUtil = new ExcelUtil();
-        List<List<Object>> list = excelUtil.readExcel(file);
-        Map<String, TrajectoryInfo> trajectoryInfoMap = new HashMap<>();
+    public List<TrajectoryInfo> getTrajectoryInfos(URL url) throws ParseException {
+        CsvUtil csvUtil = new CsvUtil();
+        List<CSVRecord> list = csvUtil.readCsv(url);
+        Map<JudgeMap, TrajectoryInfo> trajectoryInfoMap = new HashMap<>();
         List<TrajectoryInfo> trajectoryInfos = new ArrayList<>();
-        for (List<Object> items: list){
-            if (trajectoryInfoMap.containsKey(items.get(0))){
+        DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        long init_date = df.parse("01/01/1970 00:00:00").getTime();
+        for ( CSVRecord items: list){
+            long target_date = df.parse(items.get(1)).getTime();
+            long diff = target_date - init_date;
+            long hours = diff / (1000 * 60 * 60);
+            double lat = Float.parseFloat(items.get(2));
+            double lon = Float.parseFloat(items.get(3));
+            JudgeMap judgeMap = new JudgeMap(items.get(0), hours);
+            if (!trajectoryInfoMap.containsKey(judgeMap)){
                 TrajectoryInfo trajectoryInfo = new TrajectoryInfo();
                 List<PointInfo> pointInfos = new ArrayList<>();
                 PointInfo pointInfo = new PointInfo(
-                        (String)items.get(0),
-                        (String)items.get(1),
-                        (String)items.get(4),
-                        Float.parseFloat((String) items.get(5)),
-                        Float.parseFloat((String) items.get(6)));
+                        items.get(0),
+                        items.get(1),
+                        lat,
+                        lon);
                 pointInfos.add(pointInfo);
-                trajectoryInfo.setPlanNo((String)items.get(0));
-                trajectoryInfo.setVehicleNo((String)items.get(1));
+                trajectoryInfo.setVehicleNo(items.get(0));
                 trajectoryInfo.setPointInfos(pointInfos);
-                trajectoryInfoMap.put((String)items.get(0), trajectoryInfo);
+                // 时间戳
+                trajectoryInfo.setKeyTime(hours);
+                trajectoryInfo.setMaxTime(target_date);
+                trajectoryInfo.setMinTime(target_date);
+
+                // mbr
+                trajectoryInfo.setMaxLat(lat);
+                trajectoryInfo.setMinLat(lat);
+                trajectoryInfo.setMaxLon(lon);
+                trajectoryInfo.setMinLon(lon);
+
+                trajectoryInfoMap.put(judgeMap, trajectoryInfo);
             }
             else {
-                TrajectoryInfo trajectoryInfo = trajectoryInfoMap.get(items.get(0));
+                TrajectoryInfo trajectoryInfo = trajectoryInfoMap.get(judgeMap);
                 PointInfo pointInfo = new PointInfo(
-                        (String)items.get(0),
-                        (String)items.get(1),
-                        (String)items.get(4),
-                        Float.parseFloat((String) items.get(5)),
-                        Float.parseFloat((String) items.get(6)));
+                        items.get(0),
+                        items.get(1),
+                        lat,
+                        lon);
                 trajectoryInfo.getPointInfos().add(pointInfo);
+                // 时间戳
+                if (target_date > trajectoryInfo.getMaxTime()){
+                    trajectoryInfo.setMaxTime(target_date);
+                }
+                if (target_date < trajectoryInfo.getMinTime()){
+                    trajectoryInfo.setMinTime(target_date);
+                }
+                // mbr
+                if (lat < trajectoryInfo.getMinLat()){
+                    trajectoryInfo.setMinLat(lat);
+                }
+                if (lat > trajectoryInfo.getMaxLat()){
+                    trajectoryInfo.setMaxLat(lat);
+                }
+                if (lon < trajectoryInfo.getMinLon()){
+                    trajectoryInfo.setMinLon(lon);
+                }
+                if (lon > trajectoryInfo.getMinLon()){
+                    trajectoryInfo.setMaxLon(lon);
+                }
             }
         }
         trajectoryInfoMap.forEach((key, value) -> {
@@ -58,21 +104,13 @@ public class HbaseShardServiceImpl implements HbaseShardService {
         return trajectoryInfos;
     }
 
-    public List<TrajectoryInfo> constructMbr(List<TrajectoryInfo> trajectoryInfos){
+    public List<TrajectoryInfo> constructMbr(List<TrajectoryInfo> trajectoryInfos) throws ParseException {
         for(TrajectoryInfo trajectoryInfo: trajectoryInfos){
-            String minTime = "2970-01-01 00:00:00";
-            String maxTime = "1970-01-01 00:00:00";
-            float minLat = 999;
-            float minLon = 999;
-            float maxLat = -999;
-            float maxLon = -999;
+            double minLat = 999;
+            double minLon = 999;
+            double maxLat = -999;
+            double maxLon = -999;
             for(PointInfo pointInfo: trajectoryInfo.getPointInfos()){
-//                if (pointInfo.gtm > maxTime){
-//                    maxTime = pointInfo.gtm;
-//                }
-//                if (pointInfo.gtm < minTime){
-//                    minTime = pointInfo.gtm;
-//                }
                 if (pointInfo.getLat() < minLat){
                     minLat = pointInfo.getLat();
                 }
@@ -86,8 +124,6 @@ public class HbaseShardServiceImpl implements HbaseShardService {
                     maxLon = pointInfo.getLon();
                 }
             }
-//            trajectoryInfo.setMinTime() = minTime;
-//            trajectoryInfo.setMaxTime() = maxTime;
             trajectoryInfo.setMinLon(minLon);
             trajectoryInfo.setMaxLon(maxLon);
             trajectoryInfo.setMinLat(minLat);
@@ -95,21 +131,17 @@ public class HbaseShardServiceImpl implements HbaseShardService {
             trajectoryInfo.setMidLon((minLon + maxLon) / 2.0);
             trajectoryInfo.setMidLat((minLat + maxLat) / 2.0);
 //            trajectoryInfo.setMidPoint = [trajectoryInfo.mid_lon, trajectoryInfo.mid_lat];
+
+            // 构建索引-temporal
+//            trajectoryInfo.setKeyTime();
         }
         return trajectoryInfos;
     }
 
     public List<TrajectoryInfo> dimensionReduction(List<TrajectoryInfo> trajectoryInfos){
         for (TrajectoryInfo trajectoryInfo: trajectoryInfos){
-            int[] mpMinLat = reduction_(trajectoryInfo.getMinLat(), 33.5, 37.5);
-            int[] mpMinLon = reduction_(trajectoryInfo.getMinLon(), 116.5, 120.5);
-            int[] mpMaxLat = reduction_(trajectoryInfo.getMaxLat(), 33.5, 37.5);
-            int[] mpMaxLon = reduction_(trajectoryInfo.getMaxLon(), 116.5, 120.5);
-            String keyMin = String.valueOf(mpMinLat[0]) + mpMinLon[0] + mpMinLat[1] + mpMinLon[1] + mpMinLat[2] + mpMinLon[2];
-            String keyMax = String.valueOf(mpMaxLat[0]) + mpMaxLon[0] + mpMaxLat[1] + mpMaxLon[1] + mpMaxLat[2] + mpMaxLon[2];
-
-            trajectoryInfo.setKeyMin(keyMin);
-            trajectoryInfo.setKeyMax(keyMax);
+            XZIndexing xzIndexing = new XZIndexing();
+            trajectoryInfo.setKeyRange(xzIndexing.index((short) 3, trajectoryInfo.getMinLon(), trajectoryInfo.getMinLat(),trajectoryInfo.getMaxLon(),trajectoryInfo.getMaxLat()));
         }
         return trajectoryInfos;
     }

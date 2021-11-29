@@ -5,6 +5,7 @@ import com.luck.entity.TrajectoryInfo;
 
 import java.io.File;
 import java.net.URL;
+import java.text.ParseException;
 import java.util.List;
 
 /**
@@ -13,9 +14,9 @@ import java.util.List;
  * @date 2021/11/26 1:36
  */
 public interface HbaseShardService {
-    List<TrajectoryInfo> getTrajectoryInfos(File file);
+    List<TrajectoryInfo> getTrajectoryInfos(URL url) throws ParseException;
 
-    List<TrajectoryInfo> constructMbr(List<TrajectoryInfo> trajectoryInfos);
+    List<TrajectoryInfo> constructMbr(List<TrajectoryInfo> trajectoryInfos) throws ParseException;
 
     List<TrajectoryInfo> dimensionReduction(List<TrajectoryInfo> trajectoryInfos);
 }

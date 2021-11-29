@@ -7,8 +7,8 @@ public class PointInfo implements Serializable {
     private String planNo;
     private String vehicleNo;
     private String utc;
-    private Float lat;
-    private Float lon;
+    private double lat;
+    private double lon;
 
 
     // constructor , getters and setters
@@ -16,9 +16,8 @@ public class PointInfo implements Serializable {
     }
 
     // constructor , getters and setters
-    public PointInfo(String planNo, String vehicleNo, String utc, Float lat, Float lon) {
+    public PointInfo(String vehicleNo, String utc, double lat, double lon) {
         // TODO Auto-generated constructor stub
-        this.planNo = planNo;
         this.vehicleNo = vehicleNo;
         this.utc = utc;
         this.lat = lat;
@@ -33,19 +32,19 @@ public class PointInfo implements Serializable {
         this.planNo = planNo;
     }
 
-    public Float getLat() {
+    public double getLat() {
         return lat;
     }
 
-    public void setLat(Float lat) {
+    public void setLat(double lat) {
         this.lat = lat;
     }
 
-    public Float getLon() {
+    public double getLon() {
         return lon;
     }
 
-    public void setLon(Float lon) {
+    public void setLon(double lon) {
         this.lon = lon;
     }
 
