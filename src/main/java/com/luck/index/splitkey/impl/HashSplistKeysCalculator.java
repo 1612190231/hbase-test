@@ -23,9 +23,9 @@ public class HashSplistKeysCalculator implements SplitKeysCalculator {
     public HashSplistKeysCalculator(int baseRecord, int prepareRegions) {
         this.baseRecord = baseRecord;
         //实例化rowkey生成器
-        rkGen = new HashRowKeyGenerator();
-        splitKeysNumber = prepareRegions - 1;
-        splitKeysBase = baseRecord / prepareRegions;
+        this.rkGen = new HashRowKeyGenerator();
+        this.splitKeysNumber = prepareRegions - 1;
+        this.splitKeysBase = baseRecord / prepareRegions;
     }
 
     public byte[][] calcSplitKeys() {

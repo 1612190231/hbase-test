@@ -63,4 +63,10 @@ public class PointInfo implements Serializable {
     public void setUtc(String utc) {
         this.utc = utc;
     }
+
+    @Override
+    public String toString() {
+        return "PointInfo{" +
+                "vehicleNo='" + vehicleNo + ", utc='" + utc + ", lat=" + lat + ", lon=" + lon + '}';
+    }
 }

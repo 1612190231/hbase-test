@@ -244,4 +244,16 @@ public class TrajectoryInfo implements Serializable {
     public void setRowKey(byte[] rowKey) {
         this.rowKey = rowKey;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder points = new StringBuilder("{");
+        for (PointInfo pointInfo: pointInfos) {
+            points.append(pointInfo.toString());
+        }
+        points.append("}");
+        return "TrajectoryInfo{" +
+                "pointInfos=" + points +
+                '}';
+    }
 }
