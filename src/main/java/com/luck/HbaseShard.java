@@ -9,6 +9,7 @@ import com.luck.service.impl.HbaseShardServiceImpl;
 import com.luck.service.impl.OperateServiceImpl;
 import com.luck.utils.LogUtil;
 import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.util.Bytes;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -30,7 +31,8 @@ public class HbaseShard {
         HbaseShardService hbaseShardService = new HbaseShardServiceImpl();
 //        File file = new File("file:////root/hbase/data/test.csv");
         String str = "data/test.csv";
-        URL url = new URL("file:////root/hbase/data/test.csv");
+//        URL url = new URL("file:////root/hbase/data/test.csv");
+        URL url = new URL("file:////home/cklu/data/shard/test.csv");
         List<TrajectoryInfo> trajectoryInfos = hbaseShardService.getTrajectoryInfos(url);
 //        List<OrgVo> orgList = new ArrayList();
 //        trajectoryInfos = trajectoryInfos.stream().filter(TrajectoryInfo -> TrajectoryInfo.getPointInfos().size() > 1).collect(Collectors.toList());
@@ -62,7 +64,13 @@ public class HbaseShard {
 
         // 生成分区bytes
         HashSplistKeysCalculator hashSplistKeysCalculator = new HashSplistKeysCalculator(4, 2);
-        byte[][] startKey = hashSplistKeysCalculator.calcSplitKeys();
+//        byte[][] startKey = hashSplistKeysCalculator.calcSplitKeys();
+        byte[][] startKey = new byte[][]{
+                Bytes.toBytes(10),
+                Bytes.toBytes(20),
+                Bytes.toBytes(30),
+                Bytes.toBytes(40),
+        };
         System.out.println(Arrays.deepToString(startKey));
         // 创建表
         String series = operateService.getSeries();
@@ -106,12 +114,12 @@ public class HbaseShard {
         long endTime=System.currentTimeMillis(); //获取结束时间
         logUtil.runTimeLog("addAll", endTime, startTime);
 
-        //查看表中所有数据
-        long startTime2=System.currentTimeMillis(); //获取开始时间
-        ResultScanner rs = operateService.getValueByTable();
-        long endTime2=System.currentTimeMillis(); //获取结束时间
-        logUtil.runTimeLog("getValueByTable", endTime2, startTime2);
-        logUtil.getValueByTable(rs);
+//        //查看表中所有数据
+//        long startTime2=System.currentTimeMillis(); //获取开始时间
+//        ResultScanner rs = operateService.getValueByTable();
+//        long endTime2=System.currentTimeMillis(); //获取结束时间
+//        logUtil.runTimeLog("getValueByTable", endTime2, startTime2);
+//        logUtil.getValueByTable(rs);
 //
 //        //根据rowKey前缀查询记录
 //        long startTime3=System.currentTimeMillis(); //获取开始时间
