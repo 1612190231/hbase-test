@@ -53,4 +53,9 @@ public class HashSplistKeysCalculator implements SplitKeysCalculator {
         rows = null;
         return splitKeys;
     }
+
+    @Override
+    public byte[][] getSplitKeys(int regionNum) {
+        return new byte[0][];
+    }
 }

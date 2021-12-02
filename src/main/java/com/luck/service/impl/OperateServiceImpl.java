@@ -138,7 +138,7 @@ public class OperateServiceImpl implements OperateService {
     //添加数据---按rowKey
     public void addByRowKey(BaseInfo baseInfo) {
         Table table = null;
-        String rowKey = baseInfo.getRowKey();
+        int rowKey = baseInfo.getRowKey();
         List<String> columnFamilyList = baseInfo.getColumnFamilyList();
         List<Map<String, Object>> columnsList = baseInfo.getColumnsList();
 

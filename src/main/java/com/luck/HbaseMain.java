@@ -86,7 +86,7 @@ public class HbaseMain {
             if (flag == 1){
                 continue;
             }
-            baseInfo.setRowKey(rowKey);
+            baseInfo.setRowKey(Integer.valueOf(rowKey));
             baseInfo.setColumnFamilyList(columnFamilyList);
             baseInfo.setColumnsList(columnsList);
             operateService.addByRowKey(baseInfo);

@@ -36,4 +36,9 @@ public class PartitionRowKeyManager implements RowKeyGenerator,
         }
         return splitKeys;
     }
+
+    @Override
+    public byte[][] getSplitKeys(int regionNum) {
+        return new byte[0][];
+    }
 }

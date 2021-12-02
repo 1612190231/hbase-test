@@ -8,6 +8,7 @@ import com.luck.service.OperateService;
 import com.luck.service.impl.HbaseShardServiceImpl;
 import com.luck.service.impl.OperateServiceImpl;
 import com.luck.utils.LogUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.util.Bytes;
 
@@ -31,8 +32,9 @@ public class HbaseShard {
         HbaseShardService hbaseShardService = new HbaseShardServiceImpl();
 //        File file = new File("file:////root/hbase/data/test.csv");
         String str = "data/test.csv";
-//        URL url = new URL("file:////root/hbase/data/test.csv");
-        URL url = new URL("file:////home/cklu/data/shard/test.csv");
+//        URL url = new URL("file:////C:\\Users\\user\\Desktop\\code\\hbase-test\\src\\main\\resources\\test.csv");
+        URL url = new URL("file:////root/hbase/data/test.csv");
+//        URL url = new URL("file:////home/cklu/data/shard/test.csv");
         List<TrajectoryInfo> trajectoryInfos = hbaseShardService.getTrajectoryInfos(url);
 //        List<OrgVo> orgList = new ArrayList();
 //        trajectoryInfos = trajectoryInfos.stream().filter(TrajectoryInfo -> TrajectoryInfo.getPointInfos().size() > 1).collect(Collectors.toList());
@@ -63,56 +65,53 @@ public class HbaseShard {
         operateService.init();
 
         // 生成分区bytes
-        HashSplistKeysCalculator hashSplistKeysCalculator = new HashSplistKeysCalculator(4, 2);
+//        HashSplistKeysCalculator hashSplistKeysCalculator = new HashSplistKeysCalculator(4, 2);
 //        byte[][] startKey = hashSplistKeysCalculator.calcSplitKeys();
-        byte[][] startKey = new byte[][]{
-                Bytes.toBytes(10),
-                Bytes.toBytes(20),
-                Bytes.toBytes(30),
-                Bytes.toBytes(40),
-        };
-        System.out.println(Arrays.deepToString(startKey));
+
+//        System.out.println(Arrays.deepToString(startKey));
         // 创建表
         String series = operateService.getSeries();
         String tableName = operateService.getTableName();
+        byte[][] startKey = getSplitKeys();
         operateService.createTable(tableName,series, startKey);
 
-        // 添加数据集---按rowKey
-        long startTime=System.currentTimeMillis(); //获取开始时间
-        for (TrajectoryInfo trajectoryInfo : trajectoryInfos) {
-            //            logUtil.prepareLog(list);
-
-            BaseInfo baseInfo = new BaseInfo();
-            List<String> columnFamilyList = new ArrayList<>();
-            List<Map<String, Object>> columnsList = new ArrayList<>();
-            String rowKey = trajectoryInfo.getKeyTime() + trajectoryInfo.getKeyRange() + trajectoryInfo.getVehicleNo();
-
-//          System.out.print(list.get(j));
-            try {
-                HashMap<String, Object > myMap  = new HashMap<String, Object>(){{
-                    put("vehicleNo",trajectoryInfo.getVehicleNo());
-                    put("minLon",trajectoryInfo.getMinLon());
-                    put("minLat",trajectoryInfo.getMinLat());
-                    put("maxLon",trajectoryInfo.getMaxLon());
-                    put("maxLat",trajectoryInfo.getMaxLat());
-                    put("minTime",trajectoryInfo.getMinTime());
-                    put("maxTime",trajectoryInfo.getMaxTime());
-                    put("points",trajectoryInfo.toString()); // 获取点列表
-                }};
-
-                columnFamilyList.add("data");
-                columnsList.add(myMap);
-            } catch (Exception e) {
-//                hbaseShardInsert.error("插入报错rowKey:" + rowKey);
-            }
-
-            baseInfo.setRowKey(rowKey);
-            baseInfo.setColumnFamilyList(columnFamilyList);
-            baseInfo.setColumnsList(columnsList);
-            operateService.addByRowKey(baseInfo);
-        }
-        long endTime=System.currentTimeMillis(); //获取结束时间
-        logUtil.runTimeLog("addAll", endTime, startTime);
+//        // 添加数据集---按rowKey
+//        long startTime=System.currentTimeMillis(); //获取开始时间
+//        for (TrajectoryInfo trajectoryInfo : trajectoryInfos) {
+//            //            logUtil.prepareLog(list);
+//
+//            BaseInfo baseInfo = new BaseInfo();
+//            List<String> columnFamilyList = new ArrayList<>();
+//            List<Map<String, Object>> columnsList = new ArrayList<>();
+////            String rowKey = trajectoryInfo.getKeyTime() + trajectoryInfo.getKeyRange() + trajectoryInfo.getVehicleNo();
+//            int rowKey = (int)(Math.random() * 50) + 1;
+////          System.out.print(list.get(j));
+//
+//            try {
+//                HashMap<String, Object > myMap  = new HashMap<String, Object>(){{
+//                    put("vehicleNo",trajectoryInfo.getVehicleNo());
+//                    put("minLon",trajectoryInfo.getMinLon());
+//                    put("minLat",trajectoryInfo.getMinLat());
+//                    put("maxLon",trajectoryInfo.getMaxLon());
+//                    put("maxLat",trajectoryInfo.getMaxLat());
+//                    put("minTime",trajectoryInfo.getMinTime());
+//                    put("maxTime",trajectoryInfo.getMaxTime());
+//                    put("points",trajectoryInfo.toString()); // 获取点列表
+//                }};
+//
+//                columnFamilyList.add("data");
+//                columnsList.add(myMap);
+//            } catch (Exception e) {
+////                hbaseShardInsert.error("插入报错rowKey:" + rowKey);
+//            }
+//
+//            baseInfo.setRowKey(rowKey);
+//            baseInfo.setColumnFamilyList(columnFamilyList);
+//            baseInfo.setColumnsList(columnsList);
+////            operateService.addByRowKey(baseInfo);
+//        }
+//        long endTime=System.currentTimeMillis(); //获取结束时间
+//        logUtil.runTimeLog("addAll", endTime, startTime);
 
 //        //查看表中所有数据
 //        long startTime2=System.currentTimeMillis(); //获取开始时间
@@ -129,4 +128,22 @@ public class HbaseShard {
 //        logUtil.getValueByTable(rsByKey);
     }
 
+    private static byte[][] getSplitKeys() {
+        String[] keys = new String[]{"10|", "20|", "30|", "40|", "50|",
+                "60|", "70|", "80|", "90|"};
+        byte[][] splitKeys = new byte[keys.length][];
+        TreeSet<byte[]> rows = new TreeSet<byte[]>(Bytes.BYTES_COMPARATOR);//升序排序
+        for (String key : keys) {
+            rows.add(Bytes.toBytes(key));
+        }
+        Iterator<byte[]> rowKeyIter = rows.iterator();
+        int i = 0;
+        while (rowKeyIter.hasNext()) {
+            byte[] tempRow = rowKeyIter.next();
+            rowKeyIter.remove();
+            splitKeys[i] = tempRow;
+            i++;
+        }
+        return splitKeys;
+    }
 }
