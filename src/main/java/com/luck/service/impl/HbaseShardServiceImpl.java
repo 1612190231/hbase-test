@@ -39,10 +39,10 @@ public class HbaseShardServiceImpl implements HbaseShardService {
         for ( CSVRecord items: list){
             long target_date = df.parse(items.get(1)).getTime();
             long diff = target_date - init_date;
-            long hours = diff / (1000 * 60 * 60);
+            long days = diff / (1000 * 60 * 60 * 24);
             double lat = Float.parseFloat(items.get(2));
             double lon = Float.parseFloat(items.get(3));
-            JudgeMap judgeMap = new JudgeMap(items.get(0), hours);
+            JudgeMap judgeMap = new JudgeMap(items.get(0), days);
             if (!trajectoryInfoMap.containsKey(judgeMap)){
                 TrajectoryInfo trajectoryInfo = new TrajectoryInfo();
                 List<PointInfo> pointInfos = new ArrayList<>();
@@ -51,7 +51,7 @@ public class HbaseShardServiceImpl implements HbaseShardService {
                 trajectoryInfo.setVehicleNo(items.get(0));
                 trajectoryInfo.setPointInfos(pointInfos);
                 // 时间戳
-                trajectoryInfo.setKeyTime(hours);
+                trajectoryInfo.setKeyTime(days);
                 trajectoryInfo.setMaxTime(target_date);
                 trajectoryInfo.setMinTime(target_date);
 

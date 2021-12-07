@@ -52,7 +52,7 @@ public class OperateServiceImpl implements OperateService {
         try {
             logger.info("==========init start==========");
             conn = ConnectionFactory.createConnection(config);
-            createTable(tableName, series);
+//            createTable(tableName, series);
             logger.info("===========init end===========");
         } catch (IOException e) {
             e.printStackTrace();
@@ -138,7 +138,7 @@ public class OperateServiceImpl implements OperateService {
     //添加数据---按rowKey
     public void addByRowKey(BaseInfo baseInfo) {
         Table table = null;
-        int rowKey = baseInfo.getRowKey();
+        String rowKey = baseInfo.getRowKey();
         List<String> columnFamilyList = baseInfo.getColumnFamilyList();
         List<Map<String, Object>> columnsList = baseInfo.getColumnsList();
 

@@ -10,13 +10,13 @@ import java.util.Map;
  * @date 2021/4/22 14:17
  */
 public class BaseInfo implements Serializable {
-    int rowKey;          //key
+    String rowKey;          //key
     List<String> columnFamilyList;    //列族
     List<Map<String, Object>> columnsList;    //值
 
-    public int getRowKey() { return rowKey; }
+    public String getRowKey() { return rowKey; }
 
-    public void setRowKey(int rowKey) { this.rowKey = rowKey; }
+    public void setRowKey(String rowKey) { this.rowKey = rowKey; }
 
     public List<String> getColumnFamilyList() { return columnFamilyList; }
 
