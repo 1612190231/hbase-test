@@ -9,14 +9,17 @@ import com.luck.service.OperateService;
 import com.luck.service.impl.HbaseShardServiceImpl;
 import com.luck.service.impl.OperateServiceImpl;
 import com.luck.utils.LogUtil;
+import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.Collator;
 import java.text.ParseException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author luchengkai
@@ -106,6 +109,34 @@ public class HbaseShard {
         long endTime=System.currentTimeMillis(); //获取结束时间
         logUtil.runTimeLog("addAll", endTime, startTime);
 
+        // 打印key分布
+        Map<Long, Integer> keyTimeMap = new HashMap<Long, Integer>();
+        Map<Long, Integer> keyRangeMap = new HashMap<Long, Integer>();
+        for(KeyInfo keyInfo: rowKeys){
+            if (!keyTimeMap.containsKey(keyInfo.getTimeKey())){
+                keyTimeMap.put(keyInfo.getTimeKey(), 1);
+            }
+            else{
+                Long key = keyInfo.getTimeKey();
+                keyTimeMap.put(key, keyTimeMap.get(key) + 1);
+            }
+            if (!keyRangeMap.containsKey(keyInfo.getRangeKey())){
+                keyRangeMap.put(keyInfo.getRangeKey(), 1);
+            }
+            else{
+                Long key = keyInfo.getRangeKey();
+                keyRangeMap.put(key, keyRangeMap.get(key) + 1);
+            }
+        }
+        Map<Long, Integer> result1 = new LinkedHashMap<Long, Integer>();
+        keyRangeMap.entrySet()
+                .stream().sorted(Map.Entry.comparingByKey())
+                .forEachOrdered(x -> result1.put(x.getKey(), x.getValue()));
+        System.out.println("keyTimeMap start...");
+        keyTimeMap.forEach((key, value) -> System.out.println(key + ": " + value));
+        System.out.println("keyRangeMap start...");
+        result1.forEach((key, value) -> System.out.println(key + "," + value));
+
         //开始hbase操作
         //初始化
 //        OperateService operateService = new OperateServiceImpl();
@@ -138,19 +169,20 @@ public class HbaseShard {
     private static byte[][] getSplitKeys(List<KeyInfo> rowKeys) {
 //        String[] keys = new String[]{"10|", "20|", "30|", "40|", "50|",
 //                "60|", "70|", "80|", "90|"};
-        byte[][] splitKeys = new byte[rowKeys.size()][];
-        TreeSet<byte[]> rows = new TreeSet<byte[]>(Bytes.BYTES_COMPARATOR);//升序排序
-        for (String key : rowKeys) {
-            rows.add(Bytes.toBytes(key));
-        }
-        Iterator<byte[]> rowKeyIter = rows.iterator();
-        int i = 0;
-        while (rowKeyIter.hasNext()) {
-            byte[] tempRow = rowKeyIter.next();
-            rowKeyIter.remove();
-            splitKeys[i] = tempRow;
-            i++;
-        }
-        return splitKeys;
+//        byte[][] splitKeys = new byte[rowKeys.size()][];
+//        TreeSet<byte[]> rows = new TreeSet<byte[]>(Bytes.BYTES_COMPARATOR);//升序排序
+//        for (String key : rowKeys) {
+//            rows.add(Bytes.toBytes(key));
+//        }
+//        Iterator<byte[]> rowKeyIter = rows.iterator();
+//        int i = 0;
+//        while (rowKeyIter.hasNext()) {
+//            byte[] tempRow = rowKeyIter.next();
+//            rowKeyIter.remove();
+//            splitKeys[i] = tempRow;
+//            i++;
+//        }
+//        return splitKeys;
+        return null;
     }
 }
