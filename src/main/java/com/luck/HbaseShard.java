@@ -109,33 +109,8 @@ public class HbaseShard {
         long endTime=System.currentTimeMillis(); //获取结束时间
         logUtil.runTimeLog("addAll", endTime, startTime);
 
-        // 打印key分布
-        Map<Long, Integer> keyTimeMap = new HashMap<Long, Integer>();
-        Map<Long, Integer> keyRangeMap = new HashMap<Long, Integer>();
-        for(KeyInfo keyInfo: rowKeys){
-            if (!keyTimeMap.containsKey(keyInfo.getTimeKey())){
-                keyTimeMap.put(keyInfo.getTimeKey(), 1);
-            }
-            else{
-                Long key = keyInfo.getTimeKey();
-                keyTimeMap.put(key, keyTimeMap.get(key) + 1);
-            }
-            if (!keyRangeMap.containsKey(keyInfo.getRangeKey())){
-                keyRangeMap.put(keyInfo.getRangeKey(), 1);
-            }
-            else{
-                Long key = keyInfo.getRangeKey();
-                keyRangeMap.put(key, keyRangeMap.get(key) + 1);
-            }
-        }
-        Map<Long, Integer> result1 = new LinkedHashMap<Long, Integer>();
-        keyRangeMap.entrySet()
-                .stream().sorted(Map.Entry.comparingByKey())
-                .forEachOrdered(x -> result1.put(x.getKey(), x.getValue()));
-        System.out.println("keyTimeMap start...");
-        keyTimeMap.forEach((key, value) -> System.out.println(key + ": " + value));
-        System.out.println("keyRangeMap start...");
-        result1.forEach((key, value) -> System.out.println(key + "," + value));
+        // 开始打印分布
+        printPartition(rowKeys);
 
         //开始hbase操作
         //初始化
@@ -184,5 +159,35 @@ public class HbaseShard {
 //        }
 //        return splitKeys;
         return null;
+    }
+
+    private static void printPartition(List<KeyInfo> rowKeys){
+        // 打印key分布
+        Map<Long, Integer> keyTimeMap = new HashMap<Long, Integer>();
+        Map<Long, Integer> keyRangeMap = new HashMap<Long, Integer>();
+        for(KeyInfo keyInfo: rowKeys){
+            if (!keyTimeMap.containsKey(keyInfo.getTimeKey())){
+                keyTimeMap.put(keyInfo.getTimeKey(), 1);
+            }
+            else{
+                Long key = keyInfo.getTimeKey();
+                keyTimeMap.put(key, keyTimeMap.get(key) + 1);
+            }
+            if (!keyRangeMap.containsKey(keyInfo.getRangeKey())){
+                keyRangeMap.put(keyInfo.getRangeKey(), 1);
+            }
+            else{
+                Long key = keyInfo.getRangeKey();
+                keyRangeMap.put(key, keyRangeMap.get(key) + 1);
+            }
+        }
+        Map<Long, Integer> result1 = new LinkedHashMap<Long, Integer>();
+        keyRangeMap.entrySet()
+                .stream().sorted(Map.Entry.comparingByKey())
+                .forEachOrdered(x -> result1.put(x.getKey(), x.getValue()));
+        System.out.println("keyTimeMap start...");
+        keyTimeMap.forEach((key, value) -> System.out.println(key + ": " + value));
+        System.out.println("keyRangeMap start...");
+        result1.forEach((key, value) -> System.out.println(key + "," + value));
     }
 }
