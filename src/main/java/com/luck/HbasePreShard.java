@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  * @description hbase-test主类
  * @date 2021/4/17 14:36
  */
-public class HbaseShard {
+public class HbasePreShard {
 
     public static void main(String[] args) throws MalformedURLException, ParseException {
         //日志类加载
@@ -112,6 +112,10 @@ public class HbaseShard {
         // 开始打印分布
         printPartition(rowKeys);
 
+        // 预分区
+        int partNum = 10;  // 分区个数
+        prePartition(rowKeys, partNum);
+
         //开始hbase操作
         //初始化
 //        OperateService operateService = new OperateServiceImpl();
@@ -165,7 +169,18 @@ public class HbaseShard {
         // 打印key分布
         Map<Long, Integer> keyTimeMap = new HashMap<Long, Integer>();
         Map<Long, Integer> keyRangeMap = new HashMap<Long, Integer>();
+        Map<String, Integer> keyMap = new HashMap<String, Integer>();
         for(KeyInfo keyInfo: rowKeys){
+            // 整体
+            if (!keyMap.containsKey("" + keyInfo.getTimeKey() + '-' + keyInfo.getRangeKey())){
+                keyMap.put("" + keyInfo.getTimeKey() + '-' + keyInfo.getRangeKey(), 1);
+            }
+            else{
+                String key = "" + keyInfo.getTimeKey() + '-' + keyInfo.getRangeKey();
+                keyMap.put(key, keyMap.get(key) + 1);
+            }
+
+            // time
             if (!keyTimeMap.containsKey(keyInfo.getTimeKey())){
                 keyTimeMap.put(keyInfo.getTimeKey(), 1);
             }
@@ -173,6 +188,8 @@ public class HbaseShard {
                 Long key = keyInfo.getTimeKey();
                 keyTimeMap.put(key, keyTimeMap.get(key) + 1);
             }
+
+            // range
             if (!keyRangeMap.containsKey(keyInfo.getRangeKey())){
                 keyRangeMap.put(keyInfo.getRangeKey(), 1);
             }
@@ -181,13 +198,29 @@ public class HbaseShard {
                 keyRangeMap.put(key, keyRangeMap.get(key) + 1);
             }
         }
+        // all
+        System.out.println("keyMap start...");
+        Map<String, Integer> result2 = new LinkedHashMap<String, Integer>();
+        keyMap.entrySet()
+                .stream().sorted(Map.Entry.comparingByKey())
+                .forEachOrdered(x -> result2.put(x.getKey(), x.getValue()));
+        result2.forEach((key, value) -> System.out.println(key + "," + value));
+
+        // time
+        System.out.println("keyTimeMap start...");
+        keyTimeMap.forEach((key, value) -> System.out.println(key + ": " + value));
+
+        // range
+        System.out.println("keyRangeMap start...");
         Map<Long, Integer> result1 = new LinkedHashMap<Long, Integer>();
         keyRangeMap.entrySet()
                 .stream().sorted(Map.Entry.comparingByKey())
                 .forEachOrdered(x -> result1.put(x.getKey(), x.getValue()));
-        System.out.println("keyTimeMap start...");
-        keyTimeMap.forEach((key, value) -> System.out.println(key + ": " + value));
-        System.out.println("keyRangeMap start...");
         result1.forEach((key, value) -> System.out.println(key + "," + value));
+    }
+
+    private static void prePartition(List<KeyInfo> rowKeys, int partNum){
+        // 预分区
+
     }
 }
