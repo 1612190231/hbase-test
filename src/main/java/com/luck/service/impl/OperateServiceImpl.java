@@ -1,9 +1,6 @@
 package com.luck.service.impl;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
 
@@ -11,21 +8,9 @@ import com.luck.entity.BaseInfo;
 import com.luck.service.OperateService;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.HColumnDescriptor;
-import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Admin;
-import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.ConnectionFactory;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.*;
+import org.apache.hadoop.hbase.client.*;
 
-import org.apache.hadoop.hbase.client.ResultScanner;
-import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.filter.PrefixFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.log4j.Logger;
@@ -52,6 +37,7 @@ public class OperateServiceImpl implements OperateService {
         try {
             logger.info("==========init start==========");
             conn = ConnectionFactory.createConnection(config);
+
 //            createTable(tableName, series);
             logger.info("===========init end===========");
         } catch (IOException e) {
@@ -260,5 +246,61 @@ public class OperateServiceImpl implements OperateService {
         } finally {
             IOUtils.closeQuietly(admin);
         }
+    }
+
+    // 统计region的读命中次数
+    public Long getHitCount(List<ServerName> serverNames) throws IOException {
+        Admin admin = conn.getAdmin();
+        Map<String, List<String>> result = new HashMap<>();
+        try {
+            ClusterStatus clusterStatus = admin.getClusterStatus();
+            for(ServerName serverName : serverNames) {
+                List<String> regions = new ArrayList<>();
+
+                ServerLoad serverLoad = clusterStatus.getLoad(serverName);
+                Map<byte[], RegionLoad> regionLoads = serverLoad.getRegionsLoad();
+
+                for(Map.Entry<byte[], RegionLoad> entry : regionLoads.entrySet()) {
+                    String uniqueName = new String(entry.getKey()).split(",")[0];   //该region所属的table名;
+                    if (uniqueName.equals(tableName)) {
+                        regions.add(new String(entry.getKey()));
+                    }
+                }
+
+                result.put(serverName.getServerName(), regions);
+            }
+        } finally {
+            if(admin != null) {admin.close();}
+        }
+        return 9L;
+    }
+
+    // 统计region的大小
+    public Long getRegionSize(List<ServerName> serverNames) throws IOException {
+        Admin admin = conn.getAdmin();
+        Map<String, List<String>> result = new HashMap<>();
+        try {
+            ClusterStatus clusterStatus = admin.getClusterStatus();
+            for(ServerName serverName : serverNames) {
+                List<String> regions = new ArrayList<>();
+
+                ServerLoad serverLoad = clusterStatus.getLoad(serverName);
+                Map<byte[], RegionLoad> regionLoads = serverLoad.getRegionsLoad();
+
+                for(Map.Entry<byte[], RegionLoad> entry : regionLoads.entrySet()) {
+                    String uniqueName = new String(entry.getKey()).split(",")[0];   //该region所属的table名;
+                    RegionLoad regionLoad = entry.getValue();
+                    if (uniqueName.equals(tableName)) {
+                        regions.add(new String(entry.getKey()));
+                        long hitCount = regionLoad.getReadRequestsCount();
+                    }
+                }
+
+                result.put(serverName.getServerName(), regions);
+            }
+        } finally {
+            if(admin != null) {admin.close();}
+        }
+        return 9L;
     }
 }

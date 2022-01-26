@@ -118,16 +118,16 @@ public class HbasePreShard {
 
         //开始hbase操作
         //初始化
-//        OperateService operateService = new OperateServiceImpl();
-//        operateService.setSeries("data");
-//        operateService.setTableName("hbase_shard");
-//        operateService.init();
+        OperateService operateService = new OperateServiceImpl();
+        operateService.setSeries("data");
+        operateService.setTableName("hbase_shard");
+        operateService.init();
 
         // 创建表
-//        String series = operateService.getSeries();
-//        String tableName = operateService.getTableName();
+        String series = operateService.getSeries();
+        String tableName = operateService.getTableName();
         byte[][] startKey = getSplitKeys(rowKeys);
-//        operateService.createTable(tableName,series, startKey);
+        operateService.createTable(tableName,series, startKey);
         System.out.println(startKey);
 
 //        //查看表中所有数据

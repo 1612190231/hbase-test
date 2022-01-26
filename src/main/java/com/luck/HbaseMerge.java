@@ -1,5 +1,7 @@
 package com.luck;
 
+import com.luck.service.OperateService;
+import com.luck.service.impl.OperateServiceImpl;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HRegionInfo;
@@ -23,6 +25,11 @@ public class HbaseMerge {
     private static Logger logger = LoggerFactory.getLogger(HbaseMerge.class);
 
     public static void main(String[] args) throws IOException {
+        //初始化
+        OperateService operateService = new OperateServiceImpl();
+        operateService.setSeries("data");
+        operateService.setTableName("hbase_shard");
+        operateService.init();
         if (args.length < 2) {
             throw new IllegalArgumentException("java -jar hbase-merge-tool.jar zk.quorum tablePattern [isRegex=false]");
         }
