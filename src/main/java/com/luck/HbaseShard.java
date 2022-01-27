@@ -35,8 +35,8 @@ public class HbaseShard {
         //获取数据源, 轨迹合并
         HbaseShardService hbaseShardService = new HbaseShardServiceImpl();
 //        String str = "data/test.csv";
-//        URL url = new URL("file:////C:\\Users\\user\\Desktop\\code\\hbase-test\\src\\main\\resources\\data\\test.csv");
-        URL url = new URL("file:////C:\\Users\\13908\\Desktop\\code\\hbase-test\\src\\main\\resources\\data\\test.csv");
+        URL url = new URL("file:////C:\\Users\\user\\Desktop\\code\\hbase-test\\src\\main\\resources\\test.csv");
+//        URL url = new URL("file:////C:\\Users\\13908\\Desktop\\code\\hbase-test\\src\\main\\resources\\data\\test.csv");
 //        URL url = new URL("file:////root/hbase/data/test.csv");
 //        URL url = new URL("file:////home/cklu/data/shard/test.csv");
         List<TrajectoryInfo> trajectoryInfos = hbaseShardService.getTrajectoryInfos(url);
@@ -112,8 +112,14 @@ public class HbaseShard {
         // 开始打印分布
         printPartition(rowKeys);
 
-        //开始hbase操作
-        //初始化
+        // 设定分区边界
+        int partNum = 10;
+        int pointNum = rowKeys.size();
+        double alpha = 1.3;
+        int eachSize = (int) (pointNum * 1.0 / partNum * alpha);
+
+        // 开始hbase操作
+        // 初始化
 //        OperateService operateService = new OperateServiceImpl();
 //        operateService.setSeries("data");
 //        operateService.setTableName("hbase_shard");
