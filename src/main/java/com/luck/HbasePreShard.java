@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  * @description hbase-test主类
  * @date 2021/4/17 14:36
  */
-public class HbaseShard {
+public class HbasePreShard {
 
     public static void main(String[] args) throws MalformedURLException, ParseException {
         //日志类加载
@@ -35,8 +35,8 @@ public class HbaseShard {
         //获取数据源, 轨迹合并
         HbaseShardService hbaseShardService = new HbaseShardServiceImpl();
 //        String str = "data/test.csv";
-        URL url = new URL("file:////C:\\Users\\user\\Desktop\\code\\hbase-test\\src\\main\\resources\\test.csv");
-//        URL url = new URL("file:////C:\\Users\\13908\\Desktop\\code\\hbase-test\\src\\main\\resources\\data\\test.csv");
+//        URL url = new URL("file:////C:\\Users\\user\\Desktop\\code\\hbase-test\\src\\main\\resources\\data\\test.csv");
+        URL url = new URL("file:////C:\\Users\\13908\\Desktop\\code\\hbase-test\\src\\main\\resources\\data\\test.csv");
 //        URL url = new URL("file:////root/hbase/data/test.csv");
 //        URL url = new URL("file:////home/cklu/data/shard/test.csv");
         List<TrajectoryInfo> trajectoryInfos = hbaseShardService.getTrajectoryInfos(url);
@@ -112,24 +112,22 @@ public class HbaseShard {
         // 开始打印分布
         printPartition(rowKeys);
 
-        // 设定分区边界
-        int partNum = 10;
-        int pointNum = rowKeys.size();
-        double alpha = 1.3;
-        int eachSize = (int) (pointNum * 1.0 / partNum * alpha);
+        // 预分区
+        int partNum = 10;  // 分区个数
+        prePartition(rowKeys, partNum);
 
-        // 开始hbase操作
-        // 初始化
-//        OperateService operateService = new OperateServiceImpl();
-//        operateService.setSeries("data");
-//        operateService.setTableName("hbase_shard");
-//        operateService.init();
+        //开始hbase操作
+        //初始化
+        OperateService operateService = new OperateServiceImpl();
+        operateService.setSeries("data");
+        operateService.setTableName("hbase_shard");
+        operateService.init();
 
         // 创建表
-//        String series = operateService.getSeries();
-//        String tableName = operateService.getTableName();
+        String series = operateService.getSeries();
+        String tableName = operateService.getTableName();
         byte[][] startKey = getSplitKeys(rowKeys);
-//        operateService.createTable(tableName,series, startKey);
+        operateService.createTable(tableName,series, startKey);
         System.out.println(startKey);
 
 //        //查看表中所有数据
@@ -171,7 +169,18 @@ public class HbaseShard {
         // 打印key分布
         Map<Long, Integer> keyTimeMap = new HashMap<Long, Integer>();
         Map<Long, Integer> keyRangeMap = new HashMap<Long, Integer>();
+        Map<String, Integer> keyMap = new HashMap<String, Integer>();
         for(KeyInfo keyInfo: rowKeys){
+            // 整体
+            if (!keyMap.containsKey("" + keyInfo.getTimeKey() + '-' + keyInfo.getRangeKey())){
+                keyMap.put("" + keyInfo.getTimeKey() + '-' + keyInfo.getRangeKey(), 1);
+            }
+            else{
+                String key = "" + keyInfo.getTimeKey() + '-' + keyInfo.getRangeKey();
+                keyMap.put(key, keyMap.get(key) + 1);
+            }
+
+            // time
             if (!keyTimeMap.containsKey(keyInfo.getTimeKey())){
                 keyTimeMap.put(keyInfo.getTimeKey(), 1);
             }
@@ -179,6 +188,8 @@ public class HbaseShard {
                 Long key = keyInfo.getTimeKey();
                 keyTimeMap.put(key, keyTimeMap.get(key) + 1);
             }
+
+            // range
             if (!keyRangeMap.containsKey(keyInfo.getRangeKey())){
                 keyRangeMap.put(keyInfo.getRangeKey(), 1);
             }
@@ -187,13 +198,29 @@ public class HbaseShard {
                 keyRangeMap.put(key, keyRangeMap.get(key) + 1);
             }
         }
+        // all
+        System.out.println("keyMap start...");
+        Map<String, Integer> result2 = new LinkedHashMap<String, Integer>();
+        keyMap.entrySet()
+                .stream().sorted(Map.Entry.comparingByKey())
+                .forEachOrdered(x -> result2.put(x.getKey(), x.getValue()));
+        result2.forEach((key, value) -> System.out.println(key + "," + value));
+
+        // time
+        System.out.println("keyTimeMap start...");
+        keyTimeMap.forEach((key, value) -> System.out.println(key + ": " + value));
+
+        // range
+        System.out.println("keyRangeMap start...");
         Map<Long, Integer> result1 = new LinkedHashMap<Long, Integer>();
         keyRangeMap.entrySet()
                 .stream().sorted(Map.Entry.comparingByKey())
                 .forEachOrdered(x -> result1.put(x.getKey(), x.getValue()));
-        System.out.println("keyTimeMap start...");
-        keyTimeMap.forEach((key, value) -> System.out.println(key + ": " + value));
-        System.out.println("keyRangeMap start...");
         result1.forEach((key, value) -> System.out.println(key + "," + value));
+    }
+
+    private static void prePartition(List<KeyInfo> rowKeys, int partNum){
+        // 预分区
+
     }
 }

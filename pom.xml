@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <mainClass>HbaseShard</mainClass>
+        <mainClass>HbasePreShard</mainClass>
     </properties>
 
     <groupId>com.luck</groupId>
