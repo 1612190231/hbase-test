@@ -1,6 +1,8 @@
 package com.luck.utils;
 
-import org.apache.log4j.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -12,7 +14,7 @@ import java.text.DecimalFormat;
  * @date 2021/8/12 16:55
  */
 public class FileSizeUtil {
-    private static Logger logger = Logger.getLogger(FileSizeUtil.class);
+    private static Logger logger = LoggerFactory.getLogger(FileSizeUtil.class);
     private static final String TAG=FileSizeUtil.class.getSimpleName();
 
     public static final int SIZETYPE_B = 1;//获取文件大小单位为B的double值

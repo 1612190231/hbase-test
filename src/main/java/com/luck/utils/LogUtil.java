@@ -3,7 +3,8 @@ package com.luck.utils;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -13,7 +14,7 @@ import java.util.List;
  * @date 2021/4/22 16:29
  */
 public class LogUtil {
-    private final Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     public void runTimeLog(String type, long endTime, long startTime){
         logger.info(type + " project runtime: "+(endTime-startTime)+"ms");
     }
@@ -30,5 +31,9 @@ public class LogUtil {
                 logger.info("columnFamily: " + new String(keyValue.getFamily()) + "====value: " + new String(keyValue.getValue()));
             }
         }
+    }
+
+    public void print(String s, Object... args) {
+        logger.info(s, args);
     }
 }

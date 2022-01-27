@@ -1,6 +1,9 @@
 package com.luck.service;
 
 import com.luck.entity.BaseInfo;
+import org.apache.hadoop.hbase.HRegionInfo;
+import org.apache.hadoop.hbase.RegionLoad;
+import org.apache.hadoop.hbase.ServerName;
 import org.apache.hadoop.hbase.client.ResultScanner;
 
 import java.io.IOException;
@@ -21,6 +24,10 @@ public interface OperateService {
     String getTableName();
 
     void setTableName(String tableName);
+
+    List<ServerName> getServerNames();
+
+    void setServerNames() throws IOException;
 
     // 初始化
     void init();
@@ -51,4 +58,14 @@ public interface OperateService {
 
     //删除表
     void dropTable(String tableName);
+
+    // 计算分区价值
+    long calculateRegionValue(Long rowKey) throws IOException;
+
+//    // 查询regions
+    List<HRegionInfo> getRegions() throws IOException;
+//
+//    // 统计region的大小
+    Map<String, RegionLoad> getRegionLoad(List<ServerName> serverNames) throws IOException;
+
 }

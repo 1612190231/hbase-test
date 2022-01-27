@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 
 import com.luck.entity.BaseInfo;
 import com.luck.service.OperateService;
+import com.luck.utils.ByteUtil;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.*;
@@ -13,13 +14,15 @@ import org.apache.hadoop.hbase.client.*;
 
 import org.apache.hadoop.hbase.filter.PrefixFilter;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OperateServiceImpl implements OperateService {
-    private Logger logger = Logger.getLogger(this.getClass());
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private String series;  //列族
-    private String tableName;   //表名
+    private String series;                  // 列族
+    private String tableName;               // 表名
+    private List<ServerName> serverNames;   // 服务器名
     private static Connection conn;
 
     public String getSeries() { return series; }
@@ -30,6 +33,17 @@ public class OperateServiceImpl implements OperateService {
 
     public void setTableName(String tableName) { this.tableName = tableName; }
 
+    public List<ServerName> getServerNames() {
+        return serverNames;
+    }
+
+    public void setServerNames() throws IOException {
+        Admin admin = conn.getAdmin();
+        ClusterStatus clusterStatus = admin.getClusterStatus();
+        Collection<ServerName> servers = clusterStatus.getServers();
+        this.serverNames = new ArrayList<>(servers);
+    }
+
     public void init() {
         Configuration config = HBaseConfiguration.create();
         config.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
@@ -38,11 +52,16 @@ public class OperateServiceImpl implements OperateService {
             logger.info("==========init start==========");
             conn = ConnectionFactory.createConnection(config);
 
+            Admin admin = conn.getAdmin();
+            ClusterStatus clusterStatus = admin.getClusterStatus();
+            Collection<ServerName> servers = clusterStatus.getServers();
+            serverNames = new ArrayList<>(servers);
+
 //            createTable(tableName, series);
             logger.info("===========init end===========");
         } catch (IOException e) {
             e.printStackTrace();
-            logger.error(e);
+            logger.error(String.valueOf(e));
             logger.info("==========init error==========");
         }
     }
@@ -67,7 +86,7 @@ public class OperateServiceImpl implements OperateService {
             logger.info("===========create end===========");
         } catch (Exception e) {
             e.printStackTrace();
-            logger.error(e);
+            logger.error(String.valueOf(e));
             logger.info("==========create error==========");
         }
         finally {
@@ -95,7 +114,7 @@ public class OperateServiceImpl implements OperateService {
             logger.info("===========create end===========");
         } catch (Exception e) {
             e.printStackTrace();
-            logger.error(e);
+            logger.error(String.valueOf(e));
             logger.info("==========create error==========");
         }
         finally {
@@ -114,7 +133,7 @@ public class OperateServiceImpl implements OperateService {
             }
             table.put(put);
         } catch (Exception e){
-            logger.error(e);
+            logger.error(String.valueOf(e));
             logger.info("==========add error==========");
         } finally {
             IOUtils.closeQuietly(table);
@@ -139,7 +158,7 @@ public class OperateServiceImpl implements OperateService {
             }
             table.put(put);
         } catch (Exception e){
-            logger.error(e);
+            logger.error(String.valueOf(e));
             logger.info("==========add error==========");
         } finally {
             IOUtils.closeQuietly(table);
@@ -165,7 +184,7 @@ public class OperateServiceImpl implements OperateService {
             }
             logger.info("==========getAllValue end==========");
         } catch (Exception e) {
-            logger.error(e);
+            logger.error(String.valueOf(e));
             logger.info("==========getAllValue error==========");
         } finally {
             IOUtils.closeQuietly(table);
@@ -187,7 +206,7 @@ public class OperateServiceImpl implements OperateService {
             resultStr = Bytes.toString(result);
             logger.info("==========getValueBySeries end==========");
         } catch (Exception e) {
-            logger.error(e);
+            logger.error(String.valueOf(e));
             logger.info("==========getValueBySeries error==========");
         } finally {
             IOUtils.closeQuietly(table);
@@ -206,7 +225,7 @@ public class OperateServiceImpl implements OperateService {
             logger.info("==========getValueByTable end==========");
             return rs;
         } catch (Exception e) {
-            logger.error(e);
+            logger.error(String.valueOf(e));
             logger.info("==========getValueByTable error==========");
         } finally {
             IOUtils.closeQuietly(table);
@@ -241,49 +260,93 @@ public class OperateServiceImpl implements OperateService {
             }
             logger.info("==========dropTable end==========");
         } catch (Exception e) {
-            logger.error(e);
+            logger.error(String.valueOf(e));
             logger.info("==========dropTable error==========");
         } finally {
             IOUtils.closeQuietly(admin);
         }
     }
 
-    // 统计region的读命中次数
-    public Long getHitCount(List<ServerName> serverNames) throws IOException {
-        Admin admin = conn.getAdmin();
-        Map<String, List<String>> result = new HashMap<>();
-        try {
-            ClusterStatus clusterStatus = admin.getClusterStatus();
-            for(ServerName serverName : serverNames) {
-                List<String> regions = new ArrayList<>();
+    // 计算分区价值-单
+    public long calculateRegionValue(Long rowKey) throws IOException {
+        ByteUtil byteUtil = new ByteUtil();
 
-                ServerLoad serverLoad = clusterStatus.getLoad(serverName);
-                Map<byte[], RegionLoad> regionLoads = serverLoad.getRegionsLoad();
-
-                for(Map.Entry<byte[], RegionLoad> entry : regionLoads.entrySet()) {
-                    String uniqueName = new String(entry.getKey()).split(",")[0];   //该region所属的table名;
-                    if (uniqueName.equals(tableName)) {
-                        regions.add(new String(entry.getKey()));
-                    }
-                }
-
-                result.put(serverName.getServerName(), regions);
+        // 找region的起止key
+        List<HRegionInfo> hRegionInfos = getRegions();
+        HRegionInfo hRegionInfo = null;
+        for(HRegionInfo item: hRegionInfos){
+            // 根据rowKey确定在哪个region
+            long startKey = byteUtil.convertBytesToLong(item.getStartKey());
+            long endKey = byteUtil.convertBytesToLong(item.getEndKey());
+            if (rowKey >= startKey && rowKey <= endKey){
+                hRegionInfo = item;
+                logger.info("HRegionInfo's RegionName: " + hRegionInfo.getRegionNameAsString());
             }
-        } finally {
-            if(admin != null) {admin.close();}
         }
-        return 9L;
+        if(hRegionInfo == null){
+            logger.error("找不到rowKey对应hRegionInfo");
+            return -1;
+        }
+
+        // 找region的数据量、读命中次数
+        Map<String, RegionLoad> regionLoadMap = getRegionLoad(serverNames);
+        RegionLoad regionLoad = null;
+        for (Map.Entry<String, RegionLoad> entry : regionLoadMap.entrySet()){
+            if (Arrays.equals(hRegionInfo.getRegionName(),entry.getValue().getName())){
+                regionLoad = entry.getValue();
+                logger.info("RegionLoad's RegionName: " + regionLoad.getNameAsString());
+            }
+        }
+        if (regionLoad == null){
+            logger.error("找不到rowKey对应RegionLoad");
+            return -1;
+        }
+
+        long startKey = byteUtil.convertBytesToLong(hRegionInfo.getStartKey());
+        long regionSize = regionLoad.getStorefileSizeMB();
+        long hitCount = regionLoad.getReadRequestsCount();
+        return startKey + regionSize + hitCount;
     }
 
-    // 统计region的大小
-    public Long getRegionSize(List<ServerName> serverNames) throws IOException {
+    // 计算分区价值-全
+    public long calculateRegionValue(HRegionInfo hRegionInfo) throws IOException {
+        ByteUtil byteUtil = new ByteUtil();
+        // 找region的数据量、读命中次数
+        Map<String, RegionLoad> regionLoadMap = getRegionLoad(serverNames);
+        RegionLoad regionLoad = null;
+        for (Map.Entry<String, RegionLoad> entry : regionLoadMap.entrySet()){
+            if (Arrays.equals(hRegionInfo.getRegionName(),entry.getValue().getName())){
+                regionLoad = entry.getValue();
+                logger.info("RegionLoad's RegionName: " + regionLoad.getNameAsString());
+            }
+        }
+        if (regionLoad == null){
+            logger.error("找不到rowKey对应RegionLoad");
+            return -1;
+        }
+
+        long startKey = byteUtil.convertBytesToLong(hRegionInfo.getStartKey());
+        long regionSize = regionLoad.getStorefileSizeMB();
+        long hitCount = regionLoad.getReadRequestsCount();
+        return startKey + regionSize + hitCount;
+    }
+
+    // 查询regions
+    public List<HRegionInfo> getRegions() throws IOException {
+        List<HRegionInfo> regions;
+        try (Admin admin = conn.getAdmin()) {
+            regions = admin.getTableRegions(TableName.valueOf(tableName));
+        }
+        return regions;
+    }
+
+    // 查询regionLoads
+    public Map<String, RegionLoad> getRegionLoad(List<ServerName> serverNames) throws IOException {
         Admin admin = conn.getAdmin();
-        Map<String, List<String>> result = new HashMap<>();
+        Map<String, RegionLoad> result = new HashMap<>();
         try {
             ClusterStatus clusterStatus = admin.getClusterStatus();
             for(ServerName serverName : serverNames) {
-                List<String> regions = new ArrayList<>();
-
                 ServerLoad serverLoad = clusterStatus.getLoad(serverName);
                 Map<byte[], RegionLoad> regionLoads = serverLoad.getRegionsLoad();
 
@@ -291,16 +354,13 @@ public class OperateServiceImpl implements OperateService {
                     String uniqueName = new String(entry.getKey()).split(",")[0];   //该region所属的table名;
                     RegionLoad regionLoad = entry.getValue();
                     if (uniqueName.equals(tableName)) {
-                        regions.add(new String(entry.getKey()));
-                        long hitCount = regionLoad.getReadRequestsCount();
+                        result.put(new String(entry.getKey()), regionLoad);
                     }
                 }
-
-                result.put(serverName.getServerName(), regions);
             }
         } finally {
             if(admin != null) {admin.close();}
         }
-        return 9L;
+        return result;
     }
 }
