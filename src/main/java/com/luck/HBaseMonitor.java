@@ -5,9 +5,6 @@ import com.luck.service.impl.OperateServiceImpl;
 import com.luck.utils.LogUtil;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import scala.Int;
 
 import java.io.IOException;
 import java.util.List;
@@ -48,7 +45,9 @@ public class HBaseMonitor {
 
         if (monitorType.equals("single")){
             // 监控计算单个region的数据价值
-            String rowKey = args[4];
+            long rowKey = Long.parseLong(args[4]);
+            long regionValue = operateService.calculateRegionValue(rowKey);
+            logUtil.print("region: {}; regionValue: {}", rowKey, regionValue);
         }
         else {
             int regionLimitCount = Integer.parseInt(args[4]);   // region限制数
@@ -59,7 +58,8 @@ public class HBaseMonitor {
             }
             regions.sort((o1, o2) -> Bytes.compareTo(o1.getStartKey(), o2.getStartKey()));
             for (HRegionInfo hRegionInfo: regions){
-
+                long regionValue = operateService.calculateRegionValue(hRegionInfo);
+                logUtil.print("region: {}; regionValue: {}", hRegionInfo.getRegionName(), regionValue);
             }
         }
     }

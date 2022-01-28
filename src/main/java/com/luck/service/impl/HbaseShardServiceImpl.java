@@ -133,7 +133,7 @@ public class HbaseShardServiceImpl implements HbaseShardService {
         for (TrajectoryInfo trajectoryInfo: trajectoryInfos){
             // 生成范围key
             XZIndexing xzIndexing = new XZIndexing();
-            trajectoryInfo.setKeyRange(xzIndexing.index((short) 10, trajectoryInfo.getMinLon(), trajectoryInfo.getMinLat(),trajectoryInfo.getMaxLon(),trajectoryInfo.getMaxLat()));
+            trajectoryInfo.setKeyRange(xzIndexing.index((short) 2, trajectoryInfo.getMinLon(), trajectoryInfo.getMinLat(),trajectoryInfo.getMaxLon(),trajectoryInfo.getMaxLat()));
             ByteUtil byteUtil = new ByteUtil();
 
             // 生成rowKey

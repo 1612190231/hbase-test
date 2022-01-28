@@ -1,5 +1,6 @@
 package com.luck.service.impl;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -102,12 +103,13 @@ public class OperateServiceImpl implements OperateService {
             logger.info("==========create start==========");
             admin = conn.getAdmin();
             if (!admin.tableExists(table)) {
-                System.out.println(tableName + " table not Exists");
+                logger.info(tableName + " table not Exists");
                 HTableDescriptor descriptor = new HTableDescriptor(table);
                 String[] series = seriesStr.split(",");
                 for (String s : series) {
                     descriptor.addFamily(new HColumnDescriptor(s.getBytes()));
                 }
+                logger.info(Arrays.deepToString(startKey));
                 admin.createTable(descriptor, startKey);
                 logger.info("==========create success==========");
             }

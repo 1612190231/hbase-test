@@ -62,6 +62,9 @@ public interface OperateService {
     // 计算分区价值
     long calculateRegionValue(Long rowKey) throws IOException;
 
+    // 计算分区价值
+    long calculateRegionValue(HRegionInfo hRegionInfo) throws IOException;
+
 //    // 查询regions
     List<HRegionInfo> getRegions() throws IOException;
 //

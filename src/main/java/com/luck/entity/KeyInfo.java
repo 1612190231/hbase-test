@@ -1,5 +1,8 @@
 package com.luck.entity;
 
+import com.luck.utils.ByteUtil;
+import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
+
 /**
  * @author luchengkai
  * @description 降维索引结构体
@@ -28,5 +31,28 @@ public class KeyInfo {
 
     public void setRangeKey(Long rangeKey) {
         this.rangeKey = rangeKey;
+    }
+
+    public byte[] toBytes(){
+        ByteUtil byteUtil = new ByteUtil();
+        byte[] timeKey = byteUtil.convertLongToBytes(this.timeKey);
+        byte[] rangeKey = byteUtil.convertLongToBytes(this.rangeKey);
+        return byteUtil.mergeBytes(timeKey, rangeKey);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        KeyInfo keyInfo = (KeyInfo) o;
+        if (!timeKey.equals(keyInfo.timeKey)) return false;
+        return rangeKey.equals(keyInfo.rangeKey);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = timeKey.hashCode();
+        result = 31 * result + rangeKey.hashCode();
+        return result;
     }
 }

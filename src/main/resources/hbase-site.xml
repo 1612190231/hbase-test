@@ -40,55 +40,28 @@
     See also https://hbase.apache.org/book.html#standalone_dist
   -->
   <property>
+    <name>hbase.rootdir</name>
+    <value>hdfs://master.hadoop:9000/hbase</value>
+  </property>
+
+  <property>
     <name>hbase.cluster.distributed</name>
     <value>true</value>
   </property>
+
   <property>
-    <name>hbase.rootdir</name>
-    <value>hdfs://10.11.1.192:9003/hbase-bin</value>
+     <name>hbase.zookeeper.quorum</name>
+     <value>master.hadoop:2181,slave1.hadoop:2181,slave2.hadoop:2181</value>
   </property>
-  <property>
-    <name>hbase.master</name>
-    <value>10.11.1.192:60001</value>
-  </property>
-  <property>
-    <name>hbase.master.port</name>
-    <value>60001</value>
-  </property>
-  <property>
-    <name>hbase.master.info.port</name>
-    <value>60011</value>
-  </property>
-  <property>
-    <name>hbase.regionserver.info.port</name>
-    <value>60031</value>
-  </property>
-  <property>
-    <name>hbase.zookeeper.quorum</name>
-    <value>10.11.1.196,10.11.1.192,10.11.1.193</value>
-  </property>
-  <property>
-    <name>hbase.zookeeper.property.clientPort</name>
-    <value>2182</value>
-  </property>
-  <property>
-    <name>hbase.zookeeper.property.dataDir</name>
-    <value>/home/cklu/zookeeper/hbase-bin</value>
-  </property>
+
   <property>
     <name>hbase.tmp.dir</name>
-    <value>/home/cklu/tmp/hbase-bin</value>
+    <value>./tmp</value>
   </property>
+
   <property>
     <name>hbase.unsafe.stream.capability.enforce</name>
     <value>false</value>
   </property>
-  <property>
-    <name>hbase.master.maxclockskew</name>
-    <value>1500000</value>
-  </property>
-  <property>
-    <name>dfs.permissions</name>
-    <value>false</value>
-  </property>
+
 </configuration>

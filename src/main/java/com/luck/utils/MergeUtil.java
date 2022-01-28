@@ -1,4 +1,4 @@
-package com.luck;
+package com.luck.utils;
 
 /**
  * @author luchengkai
@@ -41,7 +41,7 @@ import org.apache.hadoop.hbase.util.Bytes;
  *
  *
  */
-public class test {
+public class MergeUtil {
 
     //小region，直接合并，默认100M
     private static long lower_size = 100 * 1024 * 1024L;
