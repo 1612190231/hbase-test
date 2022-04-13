@@ -56,6 +56,9 @@ public interface OperateService {
     //根据rowKey前缀查询记录
     ResultScanner getValueByPreKey(String preRow);
 
+    //根据rowKey的filter查询记录
+    ResultScanner getValueByFilterKey(String keyRow);
+
     //删除表
     void dropTable(String tableName);
 

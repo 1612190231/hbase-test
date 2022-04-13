@@ -3,24 +3,20 @@ package com.luck;
 import com.luck.entity.BaseInfo;
 import com.luck.entity.KeyInfo;
 import com.luck.entity.TrajectoryInfo;
-import com.luck.index.splitkey.impl.HashSplistKeysCalculator;
 import com.luck.service.HbaseShardService;
 import com.luck.service.OperateService;
 import com.luck.service.impl.HbaseShardServiceImpl;
 import com.luck.service.impl.OperateServiceImpl;
 import com.luck.utils.ByteUtil;
 import com.luck.utils.LogUtil;
-import org.apache.commons.collections.map.HashedMap;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.Collator;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author luchengkai
@@ -36,10 +32,8 @@ public class HbasePreShard {
 
         //获取数据源, 轨迹合并
         HbaseShardService hbaseShardService = new HbaseShardServiceImpl();
-//        String str = "data/test.csv";
-//        URL url = new URL("file:////C:\\Users\\user\\Desktop\\code\\hbase-test\\src\\main\\resources\\data\\test.csv");
-        URL url = new URL("file:////C:\\Users\\13908\\Desktop\\code\\hbase-test\\src\\main\\resources\\data\\-0620.csv");
-//        URL url = new URL("file:////root/hbase/data/test.csv");
+//        URL url = new URL("file:////C:\\Users\\user\\Desktop\\code\\hbase-test\\src\\main\\resources\\-1010.csv");
+        URL url = new URL("file:////root/data/test/data/-210530.csv");
         List<TrajectoryInfo> trajectoryInfos = hbaseShardService.getTrajectoryInfos(url);
 //        List<OrgVo> orgList = new ArrayList();
 //        trajectoryInfos = trajectoryInfos.stream().filter(TrajectoryInfo -> TrajectoryInfo.getPointInfos().size() > 1).collect(Collectors.toList());
@@ -53,18 +47,9 @@ public class HbasePreShard {
         // 构造索引
         trajectoryInfos = hbaseShardService.dimensionReduction(trajectoryInfos);
 
-        // 导出keys
-//        List<String> keys = new ArrayList<String>();
-//        for(TrajectoryInfo trajectoryInfo: trajectoryInfos){
-//            String key = trajectoryInfo.getVehicleNo() + ',' + trajectoryInfo.getKeyTime() + ',' + trajectoryInfo.getKeyRange();
-//            keys.add(key);
-//        }
-//        File file = new File("src/main/resources/keys" + str);
-//        CsvUtil.exportCsv(file, keys);
-
         // 添加数据集---按rowKey
         List<BaseInfo> baseInfos = new ArrayList<>();
-        List<KeyInfo> shardRowKeys = new ArrayList<>();
+        List<String> shardRowKeys = new ArrayList<>();
         for (TrajectoryInfo trajectoryInfo : trajectoryInfos) {
             //            logUtil.prepareLog(list);
             if (trajectoryInfo.getKeyRange() == null || trajectoryInfo.getKeyTime() == null){
@@ -73,11 +58,12 @@ public class HbasePreShard {
             BaseInfo baseInfo = new BaseInfo();
             List<String> columnFamilyList = new ArrayList<>();
             List<Map<String, Object>> columnsList = new ArrayList<>();
-            KeyInfo keyInfo = new KeyInfo(trajectoryInfo.getKeyTime(), trajectoryInfo.getKeyRange());
-            String rowKey = Arrays.toString(keyInfo.toBytes()) + '-' + trajectoryInfo.getVehicleNo();
-            shardRowKeys.add(keyInfo);
-//            int rowKey = (int)(Math.random() * 50) + 1;
-//          System.out.print(list.get(j));
+
+            int ran = (int) (Math.random() * 100);
+            String numHash = String.format("%03d", ran);
+            String keySum = trajectoryInfo.getKeyTime() + trajectoryInfo.getKeyRange();
+            String rowKey = numHash + keySum + trajectoryInfo.getVehicleNo();
+            shardRowKeys.add(keySum);
 
             try {
                 HashMap<String, Object > myMap  = new HashMap<String, Object>(){{
@@ -94,7 +80,7 @@ public class HbasePreShard {
                 columnFamilyList.add("data");
                 columnsList.add(myMap);
             } catch (Exception e) {
-//                hbaseShardInsert.error("插入报错rowKey:" + rowKey);
+                logUtil.print("插入报错rowKey:" + rowKey);
             }
 
             baseInfo.setRowKey(rowKey);
@@ -103,49 +89,45 @@ public class HbasePreShard {
             baseInfos.add(baseInfo);
         }
 
-        // 开始打印分布
-//        printPartition(rowKeys);
-
         //开始hbase操作
         //初始化
-//        OperateService operateService = new OperateServiceImpl();
-//        operateService.setSeries("data");
-//        operateService.setTableName("hbase_shard");
-//        operateService.init();
-//
-//        // 创建表
-//        String series = operateService.getSeries();
-//        String tableName = operateService.getTableName();
+        OperateService operateService = new OperateServiceImpl();
+        operateService.setSeries("data");
+        operateService.setTableName("hbase_shard");
+        operateService.init();
+
         // 预分区
-        List rowKeyList = new ArrayList<>();
-        shardRowKeys.stream().forEach(p -> {if (!rowKeyList.contains(p)) {rowKeyList.add(p);}});
-        byte[][] startKey = getSplitKeys(shardRowKeys);
+//        List<Object> rowKeyList = new ArrayList<>();
+//        shardRowKeys.forEach(p -> {if (!rowKeyList.contains(p)) {rowKeyList.add(p);}});
+//        byte[][] startKey = getSplitKeys(shardRowKeys);
+        // 打印分布
+//        printPartition(rowKeys);
+
+        // 创建表
+        String series = operateService.getSeries();
+        String tableName = operateService.getTableName();
+        operateService.createTable(tableName,series);
 //        operateService.createTable(tableName,series, startKey);
-//        System.out.println(startKey);
+//        System.out.println(Arrays.deepToString(startKey));
 
         // 插入数据
-//        long startTime=System.currentTimeMillis(); //获取开始时间
-//        for(BaseInfo baseInfo: baseInfos){
-//            operateService.addByRowKey(baseInfo);
-//        }
-//        long endTime=System.currentTimeMillis(); //获取结束时间
-//        logUtil.runTimeLog("addAll", endTime, startTime);
-
-//        //查看表中所有数据
-//        long startTime2=System.currentTimeMillis(); //获取开始时间
-//        ResultScanner rs = operateService.getValueByTable();
-//        long endTime2=System.currentTimeMillis(); //获取结束时间
-//        logUtil.runTimeLog("getValueByTable", endTime2, startTime2);
-//        logUtil.getValueByTable(rs);
+        long startTime=System.currentTimeMillis(); //获取开始时间
+        for(BaseInfo baseInfo: baseInfos){
+            operateService.addByRowKey(baseInfo);
+        }
+        long endTime=System.currentTimeMillis(); //获取结束时间
+        logUtil.runTimeLog("addAll", endTime, startTime);
     }
 
-    private static byte[][] getSplitKeys(List<KeyInfo> shardRowKeys) {
-        byte[][] splitKeys = new byte[shardRowKeys.size()][];
+    private static byte[][] getSplitKeys(List<String> shardRowKeys) {
+        Map<String, Integer> treeMap = new TreeMap<>();
         TreeSet<byte[]> rows = new TreeSet<byte[]>(Bytes.BYTES_COMPARATOR);//升序排序
-        for(KeyInfo keyInfo: shardRowKeys){
-            byte[] byteKey = keyInfo.toBytes();
+        for(String keyInfo: shardRowKeys){
+            treeMap.put(keyInfo, treeMap.getOrDefault(keyInfo, 0) + 1);
+            byte[] byteKey = keyInfo.getBytes(StandardCharsets.UTF_8);
             rows.add(byteKey);
         }
+        byte[][] splitKeys = new byte[rows.size()][];
         Iterator<byte[]> rowKeyIter = rows.iterator();
         int i = 0;
         while (rowKeyIter.hasNext()) {
@@ -158,8 +140,8 @@ public class HbasePreShard {
 
     private static void printPartition(List<KeyInfo> rowKeys){
         // 打印key分布
-        Map<Long, Integer> keyTimeMap = new HashMap<Long, Integer>();
-        Map<Long, Integer> keyRangeMap = new HashMap<Long, Integer>();
+        Map<String, Integer> keyTimeMap = new HashMap<String, Integer>();
+        Map<String, Integer> keyRangeMap = new HashMap<String, Integer>();
         Map<String, Integer> keyMap = new HashMap<String, Integer>();
         for(KeyInfo keyInfo: rowKeys){
             // 整体
@@ -176,7 +158,7 @@ public class HbasePreShard {
                 keyTimeMap.put(keyInfo.getTimeKey(), 1);
             }
             else{
-                Long key = keyInfo.getTimeKey();
+                String key = keyInfo.getTimeKey();
                 keyTimeMap.put(key, keyTimeMap.get(key) + 1);
             }
 
@@ -185,7 +167,7 @@ public class HbasePreShard {
                 keyRangeMap.put(keyInfo.getRangeKey(), 1);
             }
             else{
-                Long key = keyInfo.getRangeKey();
+                String key = keyInfo.getRangeKey();
                 keyRangeMap.put(key, keyRangeMap.get(key) + 1);
             }
         }
@@ -203,7 +185,7 @@ public class HbasePreShard {
 
         // range
         System.out.println("keyRangeMap start...");
-        Map<Long, Integer> result1 = new LinkedHashMap<Long, Integer>();
+        Map<String, Integer> result1 = new LinkedHashMap<String, Integer>();
         keyRangeMap.entrySet()
                 .stream().sorted(Map.Entry.comparingByKey())
                 .forEachOrdered(x -> result1.put(x.getKey(), x.getValue()));

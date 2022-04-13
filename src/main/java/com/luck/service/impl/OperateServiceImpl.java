@@ -13,7 +13,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.*;
 
-import org.apache.hadoop.hbase.filter.PrefixFilter;
+import org.apache.hadoop.hbase.filter.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -243,6 +243,20 @@ public class OperateServiceImpl implements OperateService {
             s.setFilter(new PrefixFilter(preRow.getBytes()));
             ResultScanner rs = table.getScanner(s);
             return rs;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    //根据rowKey filter筛选数据
+    public ResultScanner getValueByFilterKey(String keyRow) {
+        try {
+            Scan s = new Scan();
+            Table table = conn.getTable(TableName.valueOf(tableName));
+            Filter filter = new RowFilter(CompareFilter.CompareOp.EQUAL, new SubstringComparator(keyRow));
+            s.setFilter(filter);
+            return table.getScanner(s);
         } catch (IOException e) {
             e.printStackTrace();
         }

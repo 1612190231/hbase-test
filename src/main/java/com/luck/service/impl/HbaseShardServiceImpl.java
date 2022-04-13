@@ -9,19 +9,11 @@ import com.luck.utils.CsvUtil;
 import org.apache.commons.csv.CSVRecord;
 
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-
-class JudgeMap {
-    private String vehicleNo;
-    private Long nums;
-    JudgeMap(String vehicleNo, Long nums){
-        this.nums = nums;
-        this.vehicleNo = vehicleNo;
-    }
-}
 
 /**
  * @author luchengkai
@@ -32,18 +24,20 @@ public class HbaseShardServiceImpl implements HbaseShardService {
     public List<TrajectoryInfo> getTrajectoryInfos(URL url) throws ParseException {
         CsvUtil csvUtil = new CsvUtil();
         List<CSVRecord> list = csvUtil.readCsv(url);
-        Map<JudgeMap, TrajectoryInfo> trajectoryInfoMap = new HashMap<>();
+        Map<String, TrajectoryInfo> trajectoryInfoMap = new HashMap<>();
         List<TrajectoryInfo> trajectoryInfos = new ArrayList<>();
         DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        long init_date = df.parse("01/01/1970 00:00:00").getTime();
+        long init_date = df.parse("01/01/2020 00:00:00").getTime();
         for ( CSVRecord items: list){
+            if(items.get(0).compareTo("truck_no") == 0){ continue; }
             long target_date = df.parse(items.get(1)).getTime();
             long diff = target_date - init_date;
             long days = diff / (1000 * 60 * 60 * 24);
+            String numString = String.format("%05d", days);
             double lat = Float.parseFloat(items.get(2));
             double lon = Float.parseFloat(items.get(3));
-            JudgeMap judgeMap = new JudgeMap(items.get(0), days);
-            if (!trajectoryInfoMap.containsKey(judgeMap)){
+            String judgeString = items.get(0) + numString;
+            if (!trajectoryInfoMap.containsKey(judgeString)){
                 TrajectoryInfo trajectoryInfo = new TrajectoryInfo();
                 List<PointInfo> pointInfos = new ArrayList<>();
                 PointInfo pointInfo = new PointInfo(items.get(0), items.get(1), lat, lon);
@@ -51,7 +45,7 @@ public class HbaseShardServiceImpl implements HbaseShardService {
                 trajectoryInfo.setVehicleNo(items.get(0));
                 trajectoryInfo.setPointInfos(pointInfos);
                 // 时间戳
-                trajectoryInfo.setKeyTime(days);
+                trajectoryInfo.setKeyTime(numString);
                 trajectoryInfo.setMaxTime(target_date);
                 trajectoryInfo.setMinTime(target_date);
 
@@ -61,10 +55,10 @@ public class HbaseShardServiceImpl implements HbaseShardService {
                 trajectoryInfo.setMaxLon(lon);
                 trajectoryInfo.setMinLon(lon);
 
-                trajectoryInfoMap.put(judgeMap, trajectoryInfo);
+                trajectoryInfoMap.put(judgeString, trajectoryInfo);
             }
             else {
-                TrajectoryInfo trajectoryInfo = trajectoryInfoMap.get(judgeMap);
+                TrajectoryInfo trajectoryInfo = trajectoryInfoMap.get(judgeString);
                 PointInfo pointInfo = new PointInfo(items.get(0), items.get(1), lat, lon);
                 trajectoryInfo.getPointInfos().add(pointInfo);
                 // 时间戳
@@ -133,12 +127,15 @@ public class HbaseShardServiceImpl implements HbaseShardService {
         for (TrajectoryInfo trajectoryInfo: trajectoryInfos){
             // 生成范围key
             XZIndexing xzIndexing = new XZIndexing();
-            trajectoryInfo.setKeyRange(xzIndexing.index((short) 2, trajectoryInfo.getMinLon(), trajectoryInfo.getMinLat(),trajectoryInfo.getMaxLon(),trajectoryInfo.getMaxLat()));
+            long keyRange = xzIndexing.index((short) 9, trajectoryInfo.getMinLon(),
+                    trajectoryInfo.getMinLat(), trajectoryInfo.getMaxLon(), trajectoryInfo.getMaxLat());
+            String numString = String.format("%09d", keyRange);
+            trajectoryInfo.setKeyRange(numString);
             ByteUtil byteUtil = new ByteUtil();
 
             // 生成rowKey
-            byte[] timeKey = byteUtil.convertLongToBytes(trajectoryInfo.getKeyTime());
-            byte[] rangeKey = byteUtil.convertLongToBytes(trajectoryInfo.getKeyRange());
+            byte[] timeKey = trajectoryInfo.getKeyTime().getBytes(StandardCharsets.UTF_8);
+            byte[] rangeKey = trajectoryInfo.getKeyRange().getBytes(StandardCharsets.UTF_8);
             trajectoryInfo.setRowKey(byteUtil.mergeBytes(timeKey, rangeKey));
         }
         return trajectoryInfos;
