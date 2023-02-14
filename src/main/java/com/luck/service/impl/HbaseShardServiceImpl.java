@@ -7,6 +7,8 @@ import com.luck.service.HbaseShardService;
 import com.luck.utils.ByteUtil;
 import com.luck.utils.CsvUtil;
 import org.apache.commons.csv.CSVRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -21,6 +23,8 @@ import java.util.*;
  * @date 2021/11/26 1:37
  */
 public class HbaseShardServiceImpl implements HbaseShardService {
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
     public List<TrajectoryInfo> getTrajectoryInfos(URL url) throws ParseException {
         CsvUtil csvUtil = new CsvUtil();
         List<CSVRecord> list = csvUtil.readCsv(url);
@@ -127,8 +131,18 @@ public class HbaseShardServiceImpl implements HbaseShardService {
         for (TrajectoryInfo trajectoryInfo: trajectoryInfos){
             // 生成范围key
             XZIndexing xzIndexing = new XZIndexing();
-            long keyRange = xzIndexing.index((short) 9, trajectoryInfo.getMinLon(),
-                    trajectoryInfo.getMinLat(), trajectoryInfo.getMaxLon(), trajectoryInfo.getMaxLat());
+            long keyRange = 0;
+            try{
+                keyRange = xzIndexing.index((short) 9, trajectoryInfo.getMinLon(),
+                        trajectoryInfo.getMinLat(), trajectoryInfo.getMaxLon(), trajectoryInfo.getMaxLat());
+            } catch (Exception e){
+                logger.info("error info: " + trajectoryInfo.getMinLon() + ";"
+                        + trajectoryInfo.getMinLat() + ";"
+                        + trajectoryInfo.getMaxLon() + ";"
+                        + trajectoryInfo.getMaxLat());
+                continue;
+            }
+
             String numString = String.format("%09d", keyRange);
             trajectoryInfo.setKeyRange(numString);
             ByteUtil byteUtil = new ByteUtil();

@@ -6,8 +6,12 @@ import com.luck.service.impl.OperateServiceImpl;
 import com.luck.utils.LogUtil;
 import com.luck.utils.ExcelUtil;
 import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.filter.CompareFilter;
+import org.apache.hadoop.hbase.filter.Filter;
+import org.apache.hadoop.hbase.filter.PrefixFilter;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,7 +24,7 @@ import java.util.Map;
  */
 public class HbaseMain {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         //日志类加载
         LogUtil logUtil = new LogUtil();
 
@@ -45,6 +49,7 @@ public class HbaseMain {
 
         //添加数据集---按rowKey
         long startTime=System.currentTimeMillis(); //获取开始时间
+        List<BaseInfo> baseInfos = new ArrayList<>();
         for (int i = 0; i < excelList.size(); i++) {
             List list = (List) excelList.get(i);
 //            logUtil.prepareLog(list);
@@ -89,8 +94,9 @@ public class HbaseMain {
             baseInfo.setRowKey(rowKey);
             baseInfo.setColumnFamilyList(columnFamilyList);
             baseInfo.setColumnsList(columnsList);
-            operateService.addByRowKey(baseInfo);
+            baseInfos.add(baseInfo);
         }
+        operateService.addByMutator(baseInfos);
         long endTime=System.currentTimeMillis(); //获取结束时间
         logUtil.runTimeLog("addAll", endTime, startTime);
 
@@ -136,14 +142,15 @@ public class HbaseMain {
 
         //查看表中所有数据
         long startTime2=System.currentTimeMillis(); //获取开始时间
-        ResultScanner rs = operateService.getValueByTable();
+        ResultScanner rs = operateService.getByTable();
         long endTime2=System.currentTimeMillis(); //获取结束时间
         logUtil.runTimeLog("getValueByTable", endTime2, startTime2);
 //        logUtil.getValueByTable(rs);
 
         //根据rowKey前缀查询记录
         long startTime3=System.currentTimeMillis(); //获取开始时间
-        ResultScanner rsByKey = operateService.getValueByPreKey("黑MN7991");
+        Filter filter = new PrefixFilter("黑MN7991".getBytes());
+        ResultScanner rsByKey = operateService.getByFilter(filter);
         long endTime3=System.currentTimeMillis(); //获取结束时间
         logUtil.runTimeLog("getValueByPreKey", endTime3, startTime3);
         logUtil.getValueByTable(rsByKey);

@@ -1,10 +1,13 @@
 package com.luck.service;
 
 import com.luck.entity.BaseInfo;
+import com.luck.entity.THServerInfo;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.RegionLoad;
 import org.apache.hadoop.hbase.ServerName;
+import org.apache.hadoop.hbase.client.RegionInfo;
 import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.filter.Filter;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,6 +35,9 @@ public interface OperateService {
     // 初始化
     void init();
 
+    // 初始化
+    void init(String tableName, String series);
+
     //创建表
     void createTable(String tableName, String seriesStr);
 
@@ -42,36 +48,45 @@ public interface OperateService {
     void add(String columnFamily, String rowKey, Map<String, Object> columns);
 
     //添加数据---全表
-    void addByRowKey(BaseInfo baseInfo);
+    void addByMutator(List<BaseInfo> baseInfos);
+
+    //添加数据---全表
+    void addByListPut(List<BaseInfo> baseInfo);
 
     //根据rowkey获取数据
-    Map<String, String> getAllValue(String rowKey);
+    List<RegionInfo> getRegions() throws IllegalArgumentException;
+
+    //根据rowkey获取数据
+    Map<String, String> getByRowKey(String rowKey);
 
     //根据rowkey和column获取数据
-    String getValueBySeries(String rowKey, String column);
+    String getBySeries(String rowKey, String column);
 
     //根据table查询所有数据
-    ResultScanner getValueByTable();
+    ResultScanner getByTable();
 
-    //根据rowKey前缀查询记录
-    ResultScanner getValueByPreKey(String preRow);
-
-    //根据rowKey的filter查询记录
-    ResultScanner getValueByFilterKey(String keyRow);
+    //根据filter筛选数据
+    ResultScanner getByFilter(Filter filter);
 
     //删除表
     void dropTable(String tableName);
 
-    // 计算分区价值
-    long calculateRegionValue(Long rowKey) throws IOException;
+    // 获取分区数据-postPut
+    List<THServerInfo> getRegionsStatus(String[] res) throws IOException;
 
-    // 计算分区价值
-    long calculateRegionValue(HRegionInfo hRegionInfo) throws IOException;
+    // 手动分区
+    boolean splitRegion(String regionName) throws IOException;
 
-//    // 查询regions
-    List<HRegionInfo> getRegions() throws IOException;
-//
-//    // 统计region的大小
-    Map<String, RegionLoad> getRegionLoad(List<ServerName> serverNames) throws IOException;
+    // 手动合区
+    void mergeRegion(String regionName1, String regionName2) throws IOException;
 
+    // 手动移动region
+    void moveRegion(String regionName, ServerName serverName) throws IOException;
+
+    // 清空表
+    void truncateTable() throws IOException;
+
+
+    // 平衡表
+    void balanceTable() throws IOException;
 }

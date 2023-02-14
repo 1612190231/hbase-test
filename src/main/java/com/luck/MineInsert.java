@@ -23,7 +23,7 @@ import java.util.*;
  * @description hbase-test主类
  * @date 2021/4/17 14:36
  */
-public class HbasePreShard {
+public class MineInsert {
 
     public static void main(String[] args) throws MalformedURLException, ParseException {
         //日志类加载
@@ -33,16 +33,10 @@ public class HbasePreShard {
         //获取数据源, 轨迹合并
         HbaseShardService hbaseShardService = new HbaseShardServiceImpl();
 //        URL url = new URL("file:////C:\\Users\\user\\Desktop\\code\\hbase-test\\src\\main\\resources\\-1010.csv");
-        URL url = new URL("file:////root/data/test/data/-210530.csv");
+//        URL url = new URL("file:////root/data/test/data/-210830.csv");
+        URL url = new URL(args[0]);
         List<TrajectoryInfo> trajectoryInfos = hbaseShardService.getTrajectoryInfos(url);
-//        List<OrgVo> orgList = new ArrayList();
-//        trajectoryInfos = trajectoryInfos.stream().filter(TrajectoryInfo -> TrajectoryInfo.getPointInfos().size() > 1).collect(Collectors.toList());
-//        Collections.sort(trajectoryInfos, new Comparator<TrajectoryInfo>() {
-//            public int compare(TrajectoryInfo o1, TrajectoryInfo o2) {
-//                //倒序排列的话，两参数互换就行
-//                return Collator.getInstance(Locale.CHINA).compare(o1.getVehicleNo(), o2.getVehicleNo());
-//            }
-//        });
+        logUtil.print("load url: " + url);
 
         // 构造索引
         trajectoryInfos = hbaseShardService.dimensionReduction(trajectoryInfos);
@@ -62,7 +56,8 @@ public class HbasePreShard {
             int ran = (int) (Math.random() * 100);
             String numHash = String.format("%03d", ran);
             String keySum = trajectoryInfo.getKeyTime() + trajectoryInfo.getKeyRange();
-            String rowKey = numHash + keySum + trajectoryInfo.getVehicleNo();
+            String rowKey = keySum + trajectoryInfo.getVehicleNo();
+//            String rowKey = numHash + keySum + trajectoryInfo.getVehicleNo();
             shardRowKeys.add(keySum);
 
             try {
@@ -93,7 +88,7 @@ public class HbasePreShard {
         //初始化
         OperateService operateService = new OperateServiceImpl();
         operateService.setSeries("data");
-        operateService.setTableName("hbase_shard");
+        operateService.setTableName("track_mine");
         operateService.init();
 
         // 预分区
@@ -112,9 +107,7 @@ public class HbasePreShard {
 
         // 插入数据
         long startTime=System.currentTimeMillis(); //获取开始时间
-        for(BaseInfo baseInfo: baseInfos){
-            operateService.addByRowKey(baseInfo);
-        }
+        operateService.addByMutator(baseInfos);
         long endTime=System.currentTimeMillis(); //获取结束时间
         logUtil.runTimeLog("addAll", endTime, startTime);
     }
