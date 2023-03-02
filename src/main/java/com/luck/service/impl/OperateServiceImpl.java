@@ -185,6 +185,8 @@ public class OperateServiceImpl implements OperateService {
         BufferedMutatorParams params = new BufferedMutatorParams(TableName.valueOf(tableName)).listener(listener);
         params.writeBufferSize(4*1023*1024);
         try {
+            int count = 0;
+            ArrayList<Put> puts = new ArrayList<Put>();
             BufferedMutator mutator = conn.getBufferedMutator(params);
             for (BaseInfo baseInfo : baseInfos) {
                 String rowKey = baseInfo.getRowKey();
@@ -193,13 +195,20 @@ public class OperateServiceImpl implements OperateService {
                 Put put = new Put(Bytes.toBytes(rowKey));
                 for (int i = 0; i < columnFamilyList.size(); i++) {
                     for (Entry<String, Object> entry : columnsList.get(i).entrySet()) {
+                        count++;
                         put.addColumn(columnFamilyList.get(i).getBytes(),
                                 Bytes.toBytes(entry.getKey()), Bytes.toBytes(entry.getValue().toString()));
-                        mutator.mutate(put);
+                        puts.add(put);
+                        if (count % 10000 == 0) {
+                            mutator.mutate(puts);
+                            puts.clear();
+                        }
                     }
                 }
             }
+            mutator.mutate(puts);
             mutator.close();
+            puts.clear();
         } catch(Exception e){
             logger.error(String.valueOf(e));
             logger.info("==========add error==========");

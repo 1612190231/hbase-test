@@ -23,6 +23,7 @@ public class JustInsert {
     public static void main(String[] args) throws MalformedURLException, ParseException {
         //日志类加载
         LogUtil logUtil = new LogUtil();
+        long startTime=System.currentTimeMillis(); //获取开始时间
 
         //获取数据源, 轨迹合并
         HbaseShardService hbaseShardService = new HbaseShardServiceImpl();
@@ -88,7 +89,6 @@ public class JustInsert {
         operateService.createTable(tableName,series);
 
         // 插入数据
-        long startTime=System.currentTimeMillis(); //获取开始时间
         operateService.addByMutator(baseInfos);
         long endTime=System.currentTimeMillis(); //获取结束时间
         logUtil.runTimeLog("addAll", endTime, startTime);

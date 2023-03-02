@@ -9,7 +9,9 @@ import com.luck.entity.TrajectoryInfo;
 import com.luck.service.HbaseShardService;
 import com.luck.service.impl.HbaseShardServiceImpl;
 import com.luck.utils.LogUtil;
+import com.luck.utils.TxtUtil;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.*;
@@ -22,20 +24,11 @@ import java.util.List;
 import java.util.Map;
 
 public class RTreeSelect {
-    public static void main(String[] args) throws MalformedURLException, ParseException, SQLException, ClassNotFoundException {
+    public static void main(String[] args) throws IOException, ParseException, SQLException, ClassNotFoundException {
         //日志类加载
         Class.forName("com.mysql.jdbc.Driver");
         LogUtil logUtil = new LogUtil();
 
-        //获取数据源, 轨迹合并
-        HbaseShardService hbaseShardService = new HbaseShardServiceImpl();
-        URL url = new URL("file:////E:\\Desktop\\code\\hbase-test\\src\\main\\resources\\test.csv");
-//        URL url = new URL("file:////root/data/test/data/-210830.csv");
-//        URL url = new URL(args[0]);
-        List<TrajectoryInfo> trajectoryInfos = hbaseShardService.getTrajectoryInfos(url);
-        logUtil.print("load url: " + url);
-        PreparedStatement ps;
-        PreparedStatement ps1;
         Connection connection = DriverManager.getConnection("jdbc:mysql://114.117.4.200:3306/final_paper?createDatabaseIfNotExist=true&useSSL=false", "luck", "luck");
 //        connection.setAutoCommit(false);
 
@@ -76,22 +69,32 @@ public class RTreeSelect {
         }
         logUtil.print("build rtree list success.");
         //处理range
-        Double minLon = Double.valueOf(args[0]);
-        Double maxLon = Double.valueOf(args[1]);
-        Double minLat = Double.valueOf(args[2]);
-        Double maxLat = Double.valueOf(args[3]);
-        Rectangle qRectangle = Rectangle.create(minLon, minLat, maxLon, maxLat);
-        //处理time
-        String sTime = args[4];
-        String eTime = args[5];
-        DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        long init_date = df.parse("01/01/2020 00:00:00").getTime();
-        int days_s = (int)((df.parse(sTime).getTime() - init_date) / (1000 * 60 * 60 * 24));
-        int days_e = (int)((df.parse(eTime).getTime() - init_date) / (1000 * 60 * 60 * 24));
-        for (int i = days_s; i <= days_e; i++) {
-            RTree<String, Rectangle> rTree = treeMap.get(i);
-            Iterable<com.github.davidmoten.rtreemulti.Entry<String, Rectangle>> result = rTree.search(qRectangle);
-            logUtil.print("search rTree success.");
+
+//        URL url = new URL("file:////C:\\Users\\user\\Desktop\\code\\hbase-test\\src\\main\\resources\\-1010.csv");
+//        URL url = new URL("file:////root/data/test/data/-210830.csv");
+        String url = args[0];
+        TxtUtil txtUtil = new TxtUtil();
+        List<String> querys = txtUtil.readTxt(url);
+        //模糊查询
+        for (String query: querys) {
+            String[] strs = query.split(",");
+            Double minLon = Double.valueOf(strs[0]);
+            Double maxLon = Double.valueOf(strs[1]);
+            Double minLat = Double.valueOf(strs[2]);
+            Double maxLat = Double.valueOf(strs[3]);
+            Rectangle qRectangle = Rectangle.create(minLon, minLat, maxLon, maxLat);
+            //处理time
+            String sTime = strs[4];
+            String eTime = strs[5];
+            DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+            long init_date = df.parse("01/01/2020 00:00:00").getTime();
+            int days_s = (int) ((df.parse(sTime).getTime() - init_date) / (1000 * 60 * 60 * 24));
+            int days_e = (int) ((df.parse(eTime).getTime() - init_date) / (1000 * 60 * 60 * 24));
+            for (int i = days_s; i <= days_e; i++) {
+                RTree<String, Rectangle> rTree = treeMap.get(i);
+                Iterable<com.github.davidmoten.rtreemulti.Entry<String, Rectangle>> result = rTree.search(qRectangle);
+                logUtil.print("search rTree success.");
+            }
         }
     }
 }
