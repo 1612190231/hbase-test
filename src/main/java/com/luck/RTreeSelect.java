@@ -37,7 +37,7 @@ public class RTreeSelect {
 
         // build rtree
         String keyTime = "";
-        String sql = "select keyTime, vehicleNo, minLat, maxLat, minLon, maxLon, minTime, maxTime from trajInfo order by 1";
+        String sql = "select keyTime, vehicleNo, minLat, maxLat, minLon, maxLon from trajInfo order by 1";
         Statement st = connection.createStatement();
         ResultSet resultSet = st.executeQuery(sql);
 //        List<TrajectoryInfo> trajectoryInfos1 = new ArrayList<>();
@@ -51,15 +51,13 @@ public class RTreeSelect {
             trajectoryInfo.setMaxLat(resultSet.getDouble(4));
             trajectoryInfo.setMinLon(resultSet.getDouble(5));
             trajectoryInfo.setMaxLon(resultSet.getDouble(6));
-            trajectoryInfo.setMinTime(resultSet.getLong(7));
-            trajectoryInfo.setMaxTime(resultSet.getLong(8));
 //            trajectoryInfos1.add(trajectoryInfo);
 
             if (keyTime.equalsIgnoreCase("")) {
                 keyTime = trajectoryInfo.getKeyTime();
             }
             else if (!keyTime.equalsIgnoreCase(trajectoryInfo.getKeyTime())){
-                RTree<String, Rectangle> rTree = RTree.maxChildren(4).create(entries);
+                RTree<String, Rectangle> rTree = RTree.maxChildren(9).create(entries);
                 treeMap.put(Integer.parseInt(keyTime), rTree);
                 entries = new ArrayList<>(10000);
                 keyTime = trajectoryInfo.getKeyTime();
@@ -67,7 +65,7 @@ public class RTreeSelect {
             }
 
             Rectangle rectangle = Rectangle.create(trajectoryInfo.getMinLon(), trajectoryInfo.getMinLat(), trajectoryInfo.getMaxLon(), trajectoryInfo.getMaxLat());
-            entries.add(new EntryDefault<>(trajectoryInfo.getKeyTime() + trajectoryInfo.getVehicleNo(), rectangle));
+            entries.add(new EntryDefault<>(trajectoryInfo.getKeyTime() + '-' + trajectoryInfo.getVehicleNo(), rectangle));
         }
         RTree<String, Rectangle> rTree = RTree.maxChildren(4).create(entries);
         treeMap.put(Integer.parseInt(keyTime), rTree);
@@ -77,7 +75,8 @@ public class RTreeSelect {
 //        URL url = new URL("file:////C:\\Users\\user\\Desktop\\code\\hbase-test\\src\\main\\resources\\-1010.csv");
 //        URL url = new URL("file:////root/data/test/data/-210830.csv");
 //        String url = args[0];
-        String url = "E:\\Desktop\\code\\hbase-test\\src\\main\\resources\\query_list.txt";
+//        String url = "E:\\Desktop\\code\\hbase-test\\src\\main\\resources\\query_list.txt";
+        String url = "D:\\code\\hbase-test\\src\\main\\resources\\queries\\query_perf_more10.txt";
         TxtUtil txtUtil = new TxtUtil();
         List<String> querys = txtUtil.readTxt(url);
         //模糊查询
@@ -100,8 +99,20 @@ public class RTreeSelect {
             for (int i = days_s; i <= days_e; i++) {
                 rTree = treeMap.get(i);
                 if (rTree == null) continue;
-//                List<Entry<String, Rectangle>> result = Observable.from(rTree.search(qRectangle)).toList().toBlocking().single();
-                sum+=Iterables.size(rTree.search(qRectangle));
+                List<Entry<String, Rectangle>> result = Observable.from(rTree.search(qRectangle)).toList().toBlocking().single();
+                StringBuilder builder = new StringBuilder();
+                for( int j = 0 ; j < result.size(); j++ ) {
+                    builder.append("(?,?),");
+                }
+                sql ="select points from trajInfo where (keyTime, vehicleNo) IN ("+ builder.deleteCharAt( builder.length() -1 ) +")";
+                PreparedStatement pstmt = connection.prepareStatement(sql);
+                int index = 1;
+                for (Entry<String, Rectangle> entry: result) {
+                    pstmt.setInt(index++, Integer.parseInt(entry.value().split("-")[0]));
+                    pstmt.setString(index++, entry.value().split("-")[1]);
+                }
+//                resultSet = pstmt.executeQuery();
+                sum+=result.size();
             }
             long endTime = System.currentTimeMillis(); //获取结束时间
             logUtil.print("data sum: " + sum);
