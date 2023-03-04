@@ -1,6 +1,7 @@
 package com.luck;
 
 import com.github.davidmoten.rtreemulti.Entry;
+import com.github.davidmoten.rtreemulti.Iterables;
 import com.github.davidmoten.rtreemulti.RTree;
 import com.github.davidmoten.rtreemulti.geometry.Rectangle;
 import com.github.davidmoten.rtreemulti.internal.EntryDefault;
@@ -23,6 +24,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import rx.Observable;
+
 public class RTreeSelect {
     public static void main(String[] args) throws IOException, ParseException, SQLException, ClassNotFoundException {
         //日志类加载
@@ -34,11 +37,11 @@ public class RTreeSelect {
 
         // build rtree
         String keyTime = "";
-        String sql = "select * from trajInfo";
+        String sql = "select keyTime, vehicleNo, minLat, maxLat, minLon, maxLon, minTime, maxTime from trajInfo order by 1";
         Statement st = connection.createStatement();
         ResultSet resultSet = st.executeQuery(sql);
 //        List<TrajectoryInfo> trajectoryInfos1 = new ArrayList<>();
-        List<Entry<String, Rectangle>> entries = new ArrayList<Entry<String, Rectangle>>(10000);
+        List<Entry<String, Rectangle>> entries = new ArrayList<>(10000);
         Map<Integer, RTree<String, Rectangle>> treeMap = new HashMap<>();
         while (resultSet.next()) {
             TrajectoryInfo trajectoryInfo = new TrajectoryInfo();
@@ -54,25 +57,27 @@ public class RTreeSelect {
 
             if (keyTime.equalsIgnoreCase("")) {
                 keyTime = trajectoryInfo.getKeyTime();
-                Rectangle rectangle = Rectangle.create(trajectoryInfo.getMinLon(), trajectoryInfo.getMinLat(), trajectoryInfo.getMaxLon(), trajectoryInfo.getMaxLat());
-                entries.add(new EntryDefault<String, Rectangle>(trajectoryInfo.getKeyTime() + trajectoryInfo.getVehicleNo(), rectangle));
             }
             else if (!keyTime.equalsIgnoreCase(trajectoryInfo.getKeyTime())){
                 RTree<String, Rectangle> rTree = RTree.maxChildren(4).create(entries);
-                treeMap.put(Integer.parseInt(trajectoryInfo.getKeyTime()), rTree);
-                logUtil.print("build rtree success.");
+                treeMap.put(Integer.parseInt(keyTime), rTree);
+                entries = new ArrayList<>(10000);
+                keyTime = trajectoryInfo.getKeyTime();
+//                logUtil.print("build rtree success.");
             }
-            else {
-                Rectangle rectangle = Rectangle.create(trajectoryInfo.getMinLon(), trajectoryInfo.getMinLat(), trajectoryInfo.getMaxLon(), trajectoryInfo.getMaxLat());
-                entries.add(new EntryDefault<String, Rectangle>(trajectoryInfo.getKeyTime() + trajectoryInfo.getVehicleNo(), rectangle));
-            }
+
+            Rectangle rectangle = Rectangle.create(trajectoryInfo.getMinLon(), trajectoryInfo.getMinLat(), trajectoryInfo.getMaxLon(), trajectoryInfo.getMaxLat());
+            entries.add(new EntryDefault<>(trajectoryInfo.getKeyTime() + trajectoryInfo.getVehicleNo(), rectangle));
         }
+        RTree<String, Rectangle> rTree = RTree.maxChildren(4).create(entries);
+        treeMap.put(Integer.parseInt(keyTime), rTree);
         logUtil.print("build rtree list success.");
         //处理range
 
 //        URL url = new URL("file:////C:\\Users\\user\\Desktop\\code\\hbase-test\\src\\main\\resources\\-1010.csv");
 //        URL url = new URL("file:////root/data/test/data/-210830.csv");
-        String url = args[0];
+//        String url = args[0];
+        String url = "E:\\Desktop\\code\\hbase-test\\src\\main\\resources\\query_list.txt";
         TxtUtil txtUtil = new TxtUtil();
         List<String> querys = txtUtil.readTxt(url);
         //模糊查询
@@ -93,10 +98,10 @@ public class RTreeSelect {
             int days_s = (int) ((df.parse(sTime).getTime() - init_date) / (1000 * 60 * 60 * 24));
             int days_e = (int) ((df.parse(eTime).getTime() - init_date) / (1000 * 60 * 60 * 24));
             for (int i = days_s; i <= days_e; i++) {
-                RTree<String, Rectangle> rTree = treeMap.get(i);
-                Iterable<com.github.davidmoten.rtreemulti.Entry<String, Rectangle>> result = rTree.search(qRectangle);
-                sum++;
-//                logUtil.print("search rTree success.");
+                rTree = treeMap.get(i);
+                if (rTree == null) continue;
+//                List<Entry<String, Rectangle>> result = Observable.from(rTree.search(qRectangle)).toList().toBlocking().single();
+                sum+=Iterables.size(rTree.search(qRectangle));
             }
             long endTime = System.currentTimeMillis(); //获取结束时间
             logUtil.print("data sum: " + sum);
