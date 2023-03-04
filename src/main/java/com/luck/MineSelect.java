@@ -42,7 +42,10 @@ public class MineSelect {
         String url = args[0];
         TxtUtil txtUtil = new TxtUtil();
         List<String> querys = txtUtil.readTxt(url);
+        long startTime = 0;
+        long endTime = 0;
         //模糊查询
+        List<String> rowKeys = new ArrayList<>();
         for (String query: querys) {
             String[] strs = query.split(",");
             //模糊查询
@@ -65,8 +68,7 @@ public class MineSelect {
             int days_e = (int) ((df.parse(eTime).getTime() - init_date) / (1000 * 60 * 60 * 24));
 
             int sum = 0;
-            long startTime = System.currentTimeMillis(); //获取开始时间
-            List<String> rowKeys = new ArrayList<>();
+            startTime = System.currentTimeMillis(); //获取开始时间
             for (int times = days_s; times <= days_e; times++) {
                 for (IndexRange indexRange : javaQueryRanges) {
                     int lower = (int) indexRange.lower();
@@ -79,34 +81,35 @@ public class MineSelect {
                         //                    String valueRowkey = "";
                         PrefixFilter filter = new PrefixFilter(rowKey.getBytes());
                         ResultScanner rs = operateService.getByFilter(filter);
-                        boolean flag = false;
-                        for (Result result : rs) {
-                            List<Cell> cells = result.listCells();
-                            for (Cell cell : cells) {
-                                try {
-                                    //                                valueRowkey = Bytes.toString(cell.getRowArray(),cell.getRowOffset(),cell.getRowLength()); // 获取rowkey
-                                    String familyName = Bytes.toString(cell.getFamilyArray(), cell.getFamilyOffset(), cell.getFamilyLength()); // 获取列族名
-                                    String columnName = Bytes.toString(cell.getQualifierArray(), cell.getQualifierOffset(), cell.getQualifierLength()); // 获取列名
-                                    String value = Bytes.toString(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength());
-                                    //                                logUtil.print("数据的rowkey为" + rowkey + "列族名为" + familyName + "列名为" + columnName + "列的值为" + value);
-                                    sum++;
-                                    flag = true;
-                                } catch (Exception e) {
-                                    logUtil.print(e.toString());
-                                }
-                            }
-                        }
-                        if (flag) rowKeys.add(rowKey);
+                        rowKeys.add(rowKey);
+                        sum++;
+//                        boolean flag = false;
+//                        for (Result result : rs) {
+//                            List<Cell> cells = result.listCells();
+//                            for (Cell cell : cells) {
+//                                try {
+//                                    //                                valueRowkey = Bytes.toString(cell.getRowArray(),cell.getRowOffset(),cell.getRowLength()); // 获取rowkey
+//                                    String familyName = Bytes.toString(cell.getFamilyArray(), cell.getFamilyOffset(), cell.getFamilyLength()); // 获取列族名
+//                                    String columnName = Bytes.toString(cell.getQualifierArray(), cell.getQualifierOffset(), cell.getQualifierLength()); // 获取列名
+//                                    String value = Bytes.toString(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength());
+//                                    //                                logUtil.print("数据的rowkey为" + rowkey + "列族名为" + familyName + "列名为" + columnName + "列的值为" + value);
+//                                    sum++;
+//                                    flag = true;
+//                                } catch (Exception e) {
+//                                    logUtil.print(e.toString());
+//                                }
+//                            }
+//                        }
+//                        if (flag) rowKeys.add(rowKey);
                     }
                 }
             }
-            long endTime = System.currentTimeMillis(); //获取结束时间
+            endTime = System.currentTimeMillis(); //获取结束时间
             logUtil.print("data sum: " + sum);
             logUtil.runTimeLog("getValueByTable", endTime, startTime);
-
-            ThreadUtil threadUtil = new ThreadUtil(rowKeys, endTime - startTime);
-            threadUtil.start();
         }
+        ThreadUtil threadUtil = new ThreadUtil(rowKeys, endTime - startTime);
+        threadUtil.start();
     }
 
 }

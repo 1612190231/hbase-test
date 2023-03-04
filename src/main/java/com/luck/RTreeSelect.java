@@ -77,6 +77,8 @@ public class RTreeSelect {
         List<String> querys = txtUtil.readTxt(url);
         //模糊查询
         for (String query: querys) {
+            int sum = 0;
+            long startTime = System.currentTimeMillis(); //获取开始时间
             String[] strs = query.split(",");
             Double minLon = Double.valueOf(strs[0]);
             Double maxLon = Double.valueOf(strs[1]);
@@ -93,8 +95,12 @@ public class RTreeSelect {
             for (int i = days_s; i <= days_e; i++) {
                 RTree<String, Rectangle> rTree = treeMap.get(i);
                 Iterable<com.github.davidmoten.rtreemulti.Entry<String, Rectangle>> result = rTree.search(qRectangle);
-                logUtil.print("search rTree success.");
+                sum++;
+//                logUtil.print("search rTree success.");
             }
+            long endTime = System.currentTimeMillis(); //获取结束时间
+            logUtil.print("data sum: " + sum);
+            logUtil.runTimeLog("getValueByTable", endTime, startTime);
         }
     }
 }

@@ -70,6 +70,7 @@ fabric.properties
 bin/
 tmp/
 *.tmp
+*.csv
 *.bak
 *.swp
 *~.nib

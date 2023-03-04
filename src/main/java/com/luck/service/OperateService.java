@@ -30,6 +30,8 @@ public interface OperateService {
 
     List<ServerName> getServerNames();
 
+    ServerName getServerName(String serverStr);
+
     void setServerNames() throws IOException;
 
     // 初始化

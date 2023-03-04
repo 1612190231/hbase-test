@@ -40,6 +40,15 @@ public class OperateServiceImpl implements OperateService {
         return serverNames;
     }
 
+    public ServerName getServerName(String serverStr) {
+        for (ServerName serverName: serverNames) {
+            if (serverName.getServerName().startsWith(serverStr)) {
+                return serverName;
+            }
+        }
+        return null;
+    }
+
     public void setServerNames() throws IOException {
         Admin admin = conn.getAdmin();
         ClusterStatus clusterStatus = admin.getClusterStatus();
@@ -376,6 +385,8 @@ public class OperateServiceImpl implements OperateService {
         Admin admin = conn.getAdmin();
         Map<String, List> keyMap = new HashMap<>();
         for (ServerName serverName: serverNames){
+            logger.info(String.valueOf(serverName));
+
             THServerInfo thServerInfo = new THServerInfo();
             thServerInfo.setServerName(serverName);
             thServerInfo.setTableName(tableName);
@@ -393,7 +404,7 @@ public class OperateServiceImpl implements OperateService {
 
                     String regionName = Bytes.toString(regionInfo.getRegionName());
 
-//                    logger.info(Bytes.toString(regionInfo.getRegionName()));
+                    logger.info(Bytes.toString(regionInfo.getRegionName()));
                     keyMap.put(regionName, new ArrayList<Object>() {{
                         add(startKey);
                         add(endKey);

@@ -51,7 +51,6 @@ public class StrategicMaker {
 ////            logUtil.print(thServerInfo.getServerName() + "'s serverStatus is " + thServerInfo.getServerStatus());
 //        }
 
-
         SortedMap<String, THRegionInfo> sortedMap = new TreeMap();
         for (THServerInfo thServerInfo: thServerInfos) {
 
@@ -94,10 +93,10 @@ public class StrategicMaker {
                 double betaT = (decayTime - minDecayTime) * 1.0 / (maxDecayTime - minDecayTime);
                 double gamaT = (serverHitCount == 0) ? 0 : hitCount * 1.0 / (serverHitCount * 1.0);
                 double omegaT = alphaT + 0.3 * betaT + 0.7 * gamaT;
-                logUtil.print("alphaT: " + alphaT);
-                logUtil.print("betaT: " + betaT);
-                logUtil.print("gamaT: " + gamaT);
-                logUtil.print("omegaT: " + omegaT);
+                logUtil.print("alphaT: " + alphaT); // 分区大小
+                logUtil.print("betaT: " + betaT); // 分区衰减量
+                logUtil.print("gamaT: " + gamaT); // 分区查询命中次数
+                logUtil.print("omegaT: " + omegaT); // 总和
 
                 if (omegaT > 1.05 * omega * serverRegionCount / allRegionCount) {
 //                if (omegaT > 1.05 * omega * serverRegionCount / allRegionCount || thRegionInfo.getRegionSize() > MaxRegionSize) {
@@ -160,21 +159,21 @@ public class StrategicMaker {
         }
 
         // 开始处理需要move的servers
-        List<THRegionInfo> targetHotRegions = new ArrayList<>();
-        List<ServerName> targetColdServers = new ArrayList<>();
-        for (THServerInfo thServerInfo: thServerInfos) {
-            if (thServerInfo.getServerStatus() == 1 && thServerInfo.isNeedMove()) {
-                targetHotRegions.addAll(thServerInfo.getRegionInfos());
-            }
-            else if (thServerInfo.getServerStatus() == -1 && thServerInfo.isNeedMove()) {
-                targetColdServers.add(thServerInfo.getServerName());
-            }
-        }
-        Iterator<ServerName> coldIterator = targetColdServers.iterator();
-        Iterator<THRegionInfo> hotIterator = targetHotRegions.iterator();
-        while (coldIterator.hasNext() && hotIterator.hasNext()){
-            logUtil.print(hotIterator.next().getRegionName() + "is moving!!!");
-            operateService.moveRegion(hotIterator.next().getRegionName().split(";")[1], coldIterator.next());
-        }
+//        List<THRegionInfo> targetHotRegions = new ArrayList<>();
+//        List<ServerName> targetColdServers = new ArrayList<>();
+//        for (THServerInfo thServerInfo: thServerInfos) {
+//            if (thServerInfo.getServerStatus() == 1 && thServerInfo.isNeedMove()) {
+//                targetHotRegions.addAll(thServerInfo.getRegionInfos());
+//            }
+//            else if (thServerInfo.getServerStatus() == -1 && thServerInfo.isNeedMove()) {
+//                targetColdServers.add(thServerInfo.getServerName());
+//            }
+//        }
+//        Iterator<ServerName> coldIterator = targetColdServers.iterator();
+//        Iterator<THRegionInfo> hotIterator = targetHotRegions.iterator();
+//        while (coldIterator.hasNext() && hotIterator.hasNext()){
+//            logUtil.print(hotIterator.next().getRegionName() + "is moving!!!");
+//            operateService.moveRegion(hotIterator.next().getRegionName().split(";")[1], coldIterator.next());
+//        }
     }
 }
